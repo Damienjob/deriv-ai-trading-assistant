@@ -91,6 +91,7 @@ export interface PendingOrder {
 }
 
 export interface Analysis {
+  indicators: any
   price: number
   timestamp: number
   symbol: string
@@ -108,7 +109,30 @@ export interface Analysis {
   position: PositionPlan | null
   pending_orders: PendingOrder[]
   strategies: unknown | null
+  fvgs: FVGZone[]
+  nearest_fvg_entry: FVGZone | null
 }
+
+export interface FVGZone {
+  direction: 'bullish' | 'bearish'
+  top: number
+  bottom: number
+  midpoint: number
+  size: number
+  filled: boolean
+  strength: 'strong' | 'medium' | 'weak'
+}
+
+// ─── Bougies OHLC ───────────────────────────────────────────
+export interface OHLCCandle {
+  time: number   // epoch Unix
+  open: number
+  high: number
+  low: number
+  close: number
+}
+
+export type Timeframe = '1min' | '5min' | '15min' | '30min' | '1h'
 
 interface MarketState {
   currentTick: Tick | null
@@ -118,12 +142,18 @@ interface MarketState {
   error: string | null
   baseAmount: number
   currentSymbol: string
+  // Bougies OHLC par timeframe
+  candles: Record<Timeframe, OHLCCandle[]>
+  activeTimeframe: Timeframe
 
   setTick: (tick: Tick, analysis?: Analysis) => void
   setConnected: (v: boolean) => void
   setError: (e: string | null) => void
   setBaseAmount: (v: number) => void
   setCurrentSymbol: (s: string) => void
+  setCandlesSnapshot: (data: Record<string, OHLCCandle[]>) => void
+  updateCandle: (timeframe: Timeframe, candle: OHLCCandle) => void
+  setActiveTimeframe: (tf: Timeframe) => void
 }
 
 export const useMarketStore = create<MarketState>((set) => ({
@@ -134,6 +164,8 @@ export const useMarketStore = create<MarketState>((set) => ({
   error: null,
   baseAmount: 100,
   currentSymbol: 'R_50',
+  candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
+  activeTimeframe: '5min',
 
   setTick: (tick, analysis) =>
     set((state) => ({
@@ -144,5 +176,43 @@ export const useMarketStore = create<MarketState>((set) => ({
   setConnected: (v) => set({ isConnected: v }),
   setError: (e) => set({ error: e }),
   setBaseAmount: (v) => set({ baseAmount: v }),
-  setCurrentSymbol: (s) => set({ currentSymbol: s, ticks: [], analysis: null }),
+  setCurrentSymbol: (s) => set({ currentSymbol: s, ticks: [], analysis: null, candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] } }),
+
+  setCandlesSnapshot: (data) => set((state) => {
+    const candles = { ...state.candles }
+    for (const [tf, list] of Object.entries(data)) {
+      if (tf in candles) {
+        // Dédoublonner et trier dès la réception
+        const seen = new Set<number>()
+
+        candles[tf as Timeframe] = (list as OHLCCandle[])
+          .sort((a, b) => a.time - b.time)
+          .filter(c => {
+            if (seen.has(c.time)) return false
+            seen.add(c.time)
+            return true
+          })
+      }
+    }
+    return { candles }
+  }),
+
+  updateCandle: (timeframe, candle) => set((state) => {
+    const list = [...(state.candles[timeframe] ?? [])]
+    const lastIdx = list.length - 1
+    if (lastIdx >= 0 && list[lastIdx].time === candle.time) {
+      // Mettre à jour la bougie existante
+      list[lastIdx] = candle
+    } else if (lastIdx >= 0 && candle.time <= list[lastIdx].time) {
+      // Timestamp identique ou antérieur — ignorer pour éviter les doublons
+      return {}
+    } else {
+      // Nouvelle bougie
+      list.push(candle)
+      if (list.length > 500) list.shift()
+    }
+    return { candles: { ...state.candles, [timeframe]: list } }
+  }),
+
+  setActiveTimeframe: (tf) => set({ activeTimeframe: tf }),
 }))

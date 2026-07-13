@@ -17,13 +17,16 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Callbacks
+# Callbacks — set pour éviter les doublons
 _tick_callbacks: list[Callable] = []
+_callbacks_registered: set = set()
 
 
 def on_tick(callback: Callable):
-    """Enregistre un callback appelé à chaque nouveau tick."""
-    _tick_callbacks.append(callback)
+    """Enregistre un callback une seule fois (pas de doublon)."""
+    if id(callback) not in _callbacks_registered:
+        _tick_callbacks.append(callback)
+        _callbacks_registered.add(id(callback))
 
 
 class DerivClient:

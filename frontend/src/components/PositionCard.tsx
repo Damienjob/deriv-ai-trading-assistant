@@ -47,17 +47,17 @@ export function PositionCard() {
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="bg-gray-700/50 rounded-lg p-3 text-center">
           <p className="text-gray-500 text-xs mb-1">Entrée</p>
-          <p className="text-white font-mono font-bold">{pos.entry_price.toFixed(2)}</p>
+          <p className="text-white font-mono font-bold">{pos.entry_price.toFixed(4)}</p>
         </div>
         <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
           <p className="text-green-400 text-xs mb-1">Take Profit</p>
-          <p className="text-green-400 font-mono font-bold">{pos.take_profit.toFixed(2)}</p>
-          <p className="text-green-500/70 text-xs">+{pos.tp_pips.toFixed(0)} pips</p>
+          <p className="text-green-400 font-mono font-bold">{pos.take_profit.toFixed(4)}</p>
+          <p className="text-green-500/70 text-xs">+{pos.tp_pips.toFixed(1)} pips</p>
         </div>
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
           <p className="text-red-400 text-xs mb-1">Stop Loss</p>
-          <p className="text-red-400 font-mono font-bold">{pos.stop_loss.toFixed(2)}</p>
-          <p className="text-red-500/70 text-xs">-{pos.sl_pips.toFixed(0)} pips</p>
+          <p className="text-red-400 font-mono font-bold">{pos.stop_loss.toFixed(4)}</p>
+          <p className="text-red-500/70 text-xs">-{pos.sl_pips.toFixed(1)} pips</p>
         </div>
       </div>
 

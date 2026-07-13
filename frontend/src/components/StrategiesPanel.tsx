@@ -21,6 +21,7 @@ interface StrategiesData {
     trend_pullback: StrategyData
     breakout_retest: StrategyData
     multi_timeframe: StrategyData
+    p2dro?: StrategyData   // optionnel — disponible quand M30/H1 ont assez de bougies
   }
   consensus: {
     direction: string
@@ -183,7 +184,7 @@ export function StrategiesPanel() {
         <div>
           <h3 className="text-white font-semibold text-sm">Stratégies de trading</h3>
           <p className="text-gray-500 text-xs mt-0.5">
-            Trend+Pullback · Breakout+Retest · Multi-TF
+            Trend+Pullback · Breakout+Retest · Multi-TF · P2dro
           </p>
         </div>
         <div className="text-right">
@@ -238,20 +239,27 @@ export function StrategiesPanel() {
         </div>
       )}
 
-      {/* Cartes stratégies */}
       <div className="space-y-3">
-        {stratList.map(({ key, data }) => (
-          <StrategyCard
-            key={key}
-            strat={data}
-            expanded={expanded === key}
-            onToggle={() => setExpanded(expanded === key ? null : key)}
-          />
-        ))}
+        {([
+          { key: 'trend_pullback',  data: strats.strategies.trend_pullback  },
+          { key: 'breakout_retest', data: strats.strategies.breakout_retest },
+          { key: 'multi_timeframe', data: strats.strategies.multi_timeframe },
+          { key: 'p2dro',           data: strats.strategies.p2dro           },
+        ] as { key: string; data: StrategyData | undefined }[])
+          .filter(({ data }) => data !== undefined)
+          .map(({ key, data }) => (
+            <StrategyCard
+              key={key}
+              strat={data!}
+              expanded={expanded === key}
+              onToggle={() => setExpanded(expanded === key ? null : key)}
+            />
+          ))}
       </div>
 
       <p className="text-gray-600 text-xs mt-4 pt-3 border-t border-gray-700/50">
-        Score 90-100 = Très fort · 80-89 = Fort · 70-79 = Moyen · &lt;70 = Ne pas entrer
+        Score 90-100 = Très fort · 80-89 = Fort · 70-79 = Moyen · &lt;70 = Ne pas entrer<br/>
+        P2dro : Pin Bar H1/M30 + Divergence RSI + Ligne de tendance + Confirmation
       </p>
     </div>
   )

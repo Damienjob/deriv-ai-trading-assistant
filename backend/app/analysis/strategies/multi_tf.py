@@ -51,23 +51,32 @@ def run(
 
     # ──────────────────────────────────────────────
     # 1. TENDANCE H1 — 30 pts
+    # EMA50/200 si dispo, sinon EMA50 seul vs prix (fallback)
     # ──────────────────────────────────────────────
     h1_score = 0
     macro_dir = "NEUTRAL"
 
     if ema50_h1 and ema200_h1:
         if ema50_h1 > ema200_h1:
-            h1_score = 30
-            macro_dir = "BUY"
+            h1_score = 30; macro_dir = "BUY"
             met.append(f"H1 — EMA50 > EMA200 → tendance haussière [+30]")
         elif ema50_h1 < ema200_h1:
-            h1_score = 30
-            macro_dir = "SELL"
+            h1_score = 30; macro_dir = "SELL"
             met.append(f"H1 — EMA50 < EMA200 → tendance baissière [+30]")
         else:
             failed.append("H1 — EMA50 ≈ EMA200 — pas de tendance nette [0]")
+    elif ema50_h1 and price_m15:
+        # Fallback : EMA50 H1 vs prix actuel
+        if price_m15 > ema50_h1:
+            h1_score = 20; macro_dir = "BUY"
+            met.append(f"H1 — Prix > EMA50 ({ema50_h1:.2f}) → biais haussier (fallback) [+20]")
+        elif price_m15 < ema50_h1:
+            h1_score = 20; macro_dir = "SELL"
+            met.append(f"H1 — Prix < EMA50 ({ema50_h1:.2f}) → biais baissier (fallback) [+20]")
+        else:
+            failed.append("H1 — Prix ≈ EMA50 — pas de biais clair [0]")
     else:
-        failed.append("H1 — EMA50/200 non disponibles (pas assez de bougies 1h) [0]")
+        failed.append("H1 — EMA non disponibles [0]")
 
     # Si pas de tendance macro, le signal MTF ne peut pas être fort
     # mais on continue quand même pour afficher le score partiel
@@ -80,7 +89,7 @@ def run(
     # Pullback sur support/résistance ou EMA20 (15 pts)
     pullback_score = 0
     if price_m15 and atr_m15:
-        tol = atr_m15 * 0.7
+        tol = atr_m15 * 1.2
         if macro_dir == "BUY":
             if support_m15 and abs(price_m15 - support_m15) <= tol:
                 pullback_score = 15
@@ -108,21 +117,21 @@ def run(
         if macro_dir == "BUY":
             if rsi_m15 < 35:
                 rsi_score = 20; met.append(f"M15 — RSI survendu {rsi_m15:.1f} [+20]")
-            elif rsi_m15 < 50:
+            elif rsi_m15 < 55:
                 rsi_score = 14; met.append(f"M15 — RSI haussier {rsi_m15:.1f} [+14]")
-            elif rsi_m15 < 60:
-                rsi_score = 8;  met.append(f"M15 — RSI neutre {rsi_m15:.1f} [+8]")
+            elif rsi_m15 < 70:   # jusqu'a 70 acceptable en tendance
+                rsi_score = 8;  met.append(f"M15 — RSI {rsi_m15:.1f} acceptable [+8]")
             else:
-                rsi_score = 0;  failed.append(f"M15 — RSI {rsi_m15:.1f} trop élevé pour BUY [0]")
+                rsi_score = 0;  failed.append(f"M15 — RSI {rsi_m15:.1f} suracheté pour BUY [0]")
         else:
             if rsi_m15 > 65:
                 rsi_score = 20; met.append(f"M15 — RSI suracheté {rsi_m15:.1f} [+20]")
-            elif rsi_m15 > 50:
+            elif rsi_m15 > 45:
                 rsi_score = 14; met.append(f"M15 — RSI baissier {rsi_m15:.1f} [+14]")
-            elif rsi_m15 > 40:
-                rsi_score = 8;  met.append(f"M15 — RSI neutre {rsi_m15:.1f} [+8]")
+            elif rsi_m15 > 30:   # jusqu'a 30 acceptable en tendance
+                rsi_score = 8;  met.append(f"M15 — RSI {rsi_m15:.1f} acceptable [+8]")
             else:
-                rsi_score = 0;  failed.append(f"M15 — RSI {rsi_m15:.1f} trop bas pour SELL [0]")
+                rsi_score = 0;  failed.append(f"M15 — RSI {rsi_m15:.1f} survendu pour SELL [0]")
     else:
         failed.append("M15 — RSI non disponible [0]")
 

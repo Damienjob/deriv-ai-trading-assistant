@@ -202,6 +202,166 @@ def trend_strength(ema20: Optional[float], ema50: Optional[float]) -> dict:
 
 
 # ─────────────────────────────────────────────
+# FAIR VALUE GAP (FVG) — Smart Money Concept
+# ─────────────────────────────────────────────
+
+from dataclasses import dataclass
+
+
+@dataclass
+class FVG:
+    """
+    Fair Value Gap — zone d'imbalance entre 3 bougies.
+    Le marché tend à revenir combler cette zone avant de reprendre.
+    """
+    direction: str     # "bullish" | "bearish"
+    top: float         # borne haute de la zone
+    bottom: float      # borne basse de la zone
+    midpoint: float    # centre de la zone (niveau d'entrée optimal)
+    candle_index: int  # index de la bougie centrale (dans la liste)
+    size: float        # taille de la zone en prix
+    filled: bool       # True si le prix est déjà passé dans la zone
+    strength: str      # "strong" | "medium" | "weak" (selon taille vs ATR)
+
+    def to_dict(self) -> dict:
+        return {
+            "direction": self.direction,
+            "top": round(self.top, 4),
+            "bottom": round(self.bottom, 4),
+            "midpoint": round(self.midpoint, 4),
+            "size": round(self.size, 4),
+            "filled": self.filled,
+            "strength": self.strength,
+        }
+
+
+def detect_fvg(
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    current_price: float,
+    atr_val: Optional[float] = None,
+    max_fvg: int = 5,
+    lookback: int = 50,
+) -> list[FVG]:
+    """
+    Détecte les Fair Value Gaps réels et non comblés.
+
+    Règles strictes :
+      FVG haussier : low[i] > high[i-2]  ET  la bougie centrale [i-1] ne comble pas le gap
+      FVG baissier : high[i] < low[i-2]  ET  la bougie centrale [i-1] ne comble pas le gap
+
+    Un FVG est considéré comblé si une bougie post-formation (j > i)
+    a son range [low[j], high[j]] qui chevauche la zone [bottom, top].
+
+    Seuls les FVG de force "strong" ou "medium" sont retournés (taille >= 0.2×ATR).
+    """
+    n = len(closes)
+    if n < 3:
+        return []
+
+    # Taille minimale : 0.2×ATR ou 0.01% du prix si ATR absent
+    min_size = (atr_val * 0.2) if (atr_val and atr_val > 0) else (current_price * 0.0001)
+
+    fvgs: list[FVG] = []
+    start = max(2, n - lookback)
+
+    for i in range(start, n):
+        h_prev2 = highs[i - 2]
+        l_prev2 = lows[i - 2]
+        h_mid   = highs[i - 1]   # bougie centrale
+        l_mid   = lows[i - 1]
+        h_curr  = highs[i]
+        l_curr  = lows[i]
+
+        # ── FVG Haussier : low[i] > high[i-2] ──
+        if l_curr > h_prev2:
+            top    = l_curr
+            bottom = h_prev2
+            size   = top - bottom
+            if size < min_size:
+                continue
+            # La bougie centrale ne doit pas avoir comblé le gap
+            if l_mid <= bottom or h_mid >= top:
+                continue
+            # Vérifier que les bougies suivantes n'ont pas comblé la zone
+            filled = False
+            for j in range(i + 1, n):
+                if lows[j] <= top and highs[j] >= bottom:
+                    filled = True
+                    break
+            # Vérifier aussi avec le prix actuel
+            if not filled and (bottom <= current_price <= top):
+                filled = True
+            if filled:
+                continue
+            mid = (top + bottom) / 2
+            ratio = size / atr_val if (atr_val and atr_val > 0) else 0.3
+            strength = "strong" if ratio > 0.5 else "medium"
+            fvgs.append(FVG(
+                direction="bullish",
+                top=top, bottom=bottom, midpoint=mid,
+                candle_index=i, size=size,
+                filled=False, strength=strength,
+            ))
+
+        # ── FVG Baissier : high[i] < low[i-2] ──
+        elif h_curr < l_prev2:
+            top    = l_prev2
+            bottom = h_curr
+            size   = top - bottom
+            if size < min_size:
+                continue
+            # La bougie centrale ne doit pas avoir comblé le gap
+            if h_mid >= top or l_mid <= bottom:
+                continue
+            # Vérifier que les bougies suivantes n'ont pas comblé la zone
+            filled = False
+            for j in range(i + 1, n):
+                if lows[j] <= top and highs[j] >= bottom:
+                    filled = True
+                    break
+            if not filled and (bottom <= current_price <= top):
+                filled = True
+            if filled:
+                continue
+            mid = (top + bottom) / 2
+            ratio = size / atr_val if (atr_val and atr_val > 0) else 0.3
+            strength = "strong" if ratio > 0.5 else "medium"
+            fvgs.append(FVG(
+                direction="bearish",
+                top=top, bottom=bottom, midpoint=mid,
+                candle_index=i, size=size,
+                filled=False, strength=strength,
+            ))
+
+    # Trier par proximité du prix actuel, garder les N plus proches
+    fvgs.sort(key=lambda f: abs(f.midpoint - current_price))
+    return fvgs[:max_fvg]
+
+
+def nearest_fvg(
+    fvgs: list[FVG],
+    current_price: float,
+    direction: str,  # "bullish" cherche FVG sous le prix, "bearish" au-dessus
+) -> Optional[FVG]:
+    """
+    Retourne le FVG le plus proche dans la direction attendue.
+    - Pour un signal BUY : cherche un FVG bullish sous le prix (zone de rebond)
+    - Pour un signal SELL : cherche un FVG bearish au-dessus du prix
+    """
+    candidates = []
+    for f in fvgs:
+        if direction == "bullish" and f.direction == "bullish" and f.top < current_price:
+            candidates.append(f)
+        elif direction == "bearish" and f.direction == "bearish" and f.bottom > current_price:
+            candidates.append(f)
+    if not candidates:
+        return None
+    return min(candidates, key=lambda f: abs(f.midpoint - current_price))
+
+
+# ─────────────────────────────────────────────
 # GESTION DU RISQUE
 # ─────────────────────────────────────────────
 

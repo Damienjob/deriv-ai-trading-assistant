@@ -73,7 +73,7 @@ export function ConfirmationCard() {
           <p className="text-red-300 text-xs">{inv?.reason}</p>
           {inv?.invalidation_price && (
             <p className="text-red-500/70 text-xs mt-1 font-mono">
-              Prix d'invalidation : {inv.invalidation_price.toFixed(2)}
+              Prix d'invalidation : {inv.invalidation_price.toFixed(4)}
             </p>
           )}
         </div>

@@ -25,7 +25,7 @@ function LevelBadge({ label, value, color }: { label: string; value: number | nu
     <div className="flex justify-between items-center py-1 border-b border-gray-700/40 last:border-0">
       <span className="text-gray-400 text-xs">{label}</span>
       {value != null
-        ? <span className={`font-mono text-xs font-semibold ${color}`}>{value.toFixed(2)}</span>
+        ? <span className={`font-mono text-xs font-semibold ${color}`}>{value.toFixed(4)}</span>
         : <span className="text-gray-600 text-xs">—</span>}
     </div>
   )

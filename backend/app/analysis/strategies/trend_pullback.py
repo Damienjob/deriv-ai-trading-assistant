@@ -88,7 +88,8 @@ def run(
     atr: Optional[float],
 ) -> StrategySignal:
     """
-    Évalue la stratégie Trend + Pullback sur les données fournies.
+    Évalue la stratégie Trend + Pullback.
+    Tendance : EMA50 vs EMA200 si disponible, sinon EMA20 vs EMA50.
     """
     MIN_SCORE = 80
     met: list[str] = []
@@ -97,23 +98,32 @@ def run(
 
     # ──────────────────────────────────────────────
     # 1. TENDANCE — 30 pts
+    # EMA50/200 si dispo, sinon EMA20/50 (fallback pour peu de bougies)
     # ──────────────────────────────────────────────
     trend_score = 0
     trend_dir = "NEUTRAL"
 
     if ema50 and ema200:
         if ema50 > ema200:
-            trend_score = 30
-            trend_dir = "BUY"
+            trend_score = 30; trend_dir = "BUY"
             met.append(f"Tendance haussière : EMA50 ({ema50:.2f}) > EMA200 ({ema200:.2f}) [+30]")
         elif ema50 < ema200:
-            trend_score = 30
-            trend_dir = "SELL"
+            trend_score = 30; trend_dir = "SELL"
             met.append(f"Tendance baissière : EMA50 ({ema50:.2f}) < EMA200 ({ema200:.2f}) [+30]")
         else:
             failed.append("EMA50 ≈ EMA200 — tendance neutre [0]")
+    elif ema20 and ema50:
+        # Fallback : EMA20 vs EMA50 (moins de bougies requises)
+        if ema20 > ema50:
+            trend_score = 20; trend_dir = "BUY"   # 20 pts car moins fiable
+            met.append(f"Tendance haussière (fallback) : EMA20 ({ema20:.2f}) > EMA50 ({ema50:.2f}) [+20]")
+        elif ema20 < ema50:
+            trend_score = 20; trend_dir = "SELL"
+            met.append(f"Tendance baissière (fallback) : EMA20 ({ema20:.2f}) < EMA50 ({ema50:.2f}) [+20]")
+        else:
+            failed.append("EMA20 ≈ EMA50 — tendance neutre [0]")
     else:
-        failed.append("EMA50/200 non disponibles — tendance non calculable [0]")
+        failed.append("EMA non disponibles [0]")
 
     if trend_dir == "NEUTRAL":
         return StrategySignal(
@@ -134,11 +144,11 @@ def run(
     pullback_label = ""
 
     if ema20 and atr:
-        tolerance = atr * 0.5
+        tolerance = atr * 1.2   # 1.2xATR — couvre les pullbacks typiques des Synthetics
         if abs(price - ema20) <= tolerance:
             pullback_score = 30
             pullback_label = f"EMA20 ({ema20:.2f})"
-        elif ema50 and abs(price - ema50) <= atr * 0.8:
+        elif ema50 and abs(price - ema50) <= atr * 1.5:
             pullback_score = 25
             pullback_label = f"EMA50 ({ema50:.2f})"
 
@@ -147,7 +157,7 @@ def run(
     else:
         failed.append(
             f"Pas de pullback détecté sur EMA — prix trop loin "
-            f"(EMA20={ema20:.2f if ema20 else 'N/A'}) [0]"
+            f"(EMA20={ema20 or 0:.2f}) [0]"
         )
 
     # ──────────────────────────────────────────────

@@ -4,7 +4,7 @@
  */
 import { useMarketStore } from '../store/marketStore'
 
-const TF_ORDER = ['1h', '15min', '5min', '1min']
+const TF_ORDER = ['1h', '30min', '15min', '5min', '1min']
 
 function DirBadge({ dir }: { dir: number }) {
   if (dir === 1)  return <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">▲ Haussier</span>
@@ -80,17 +80,18 @@ export function MTFPanel() {
               <div className="flex gap-4 text-xs text-gray-400 flex-wrap">
                 {ind.ema20 && ind.ema50 && (
                   <span>
-                    EMA{' '}
-                    <span className={ind.ema20 > ind.ema50 ? 'text-green-400' : 'text-red-400'}>
-                      {ind.ema20 > ind.ema50 ? '20>50' : '20<50'}
+                    EMA20 <span className={ind.ema20 > ind.ema50 ? 'text-green-400' : 'text-red-400'}>
+                      {ind.ema20.toFixed(4)}
                     </span>
+                    {' / '}
+                    <span className="text-gray-500">{ind.ema50.toFixed(4)}</span>
                   </span>
                 )}
                 {ind.rsi14 && (
                   <span>
                     RSI{' '}
                     <span className={ind.rsi14 > 70 ? 'text-red-400' : ind.rsi14 < 30 ? 'text-green-400' : 'text-white'}>
-                      {ind.rsi14.toFixed(1)}
+                      {ind.rsi14.toFixed(2)}
                     </span>
                   </span>
                 )}
@@ -98,9 +99,15 @@ export function MTFPanel() {
                   <span>
                     MACD{' '}
                     <span className={ind.macd_line > 0 ? 'text-green-400' : 'text-red-400'}>
-                      {ind.macd_line.toFixed(3)}
+                      {ind.macd_line.toFixed(4)}
                     </span>
                   </span>
+                )}
+                {ind.support && (
+                  <span>S <span className="text-blue-400">{ind.support.toFixed(4)}</span></span>
+                )}
+                {ind.resistance && (
+                  <span>R <span className="text-orange-400">{ind.resistance.toFixed(4)}</span></span>
                 )}
                 {tf.volatility.atr_pct && (
                   <span>ATR <span className="text-white">{tf.volatility.atr_pct.toFixed(3)}%</span></span>

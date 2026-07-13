@@ -13,6 +13,7 @@ TIMEFRAMES: dict[int, str] = {
     60:   "1min",
     300:  "5min",
     900:  "15min",
+    1800: "30min",   # M30 — requis par P2droStrategy
     3600: "1h",
 }
 
@@ -39,7 +40,6 @@ class CandleStore:
     def __post_init__(self):
         for gran in TIMEFRAMES:
             self._stores[gran] = deque(maxlen=self.max_candles)
-
     def add_candle(self, candle: Candle):
         store = self._stores.get(candle.granularity)
         if store is None:

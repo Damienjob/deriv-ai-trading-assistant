@@ -8,5 +8,9 @@ class Settings(BaseSettings):
 
     model_config = {"env_file": ".env"}
 
+    def set_token(self, token: str):
+        """Met à jour le token en mémoire (sans persister dans .env)."""
+        object.__setattr__(self, "deriv_api_token", token)
+
 
 settings = Settings()

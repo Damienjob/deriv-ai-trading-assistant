@@ -29,7 +29,7 @@ function IndicatorRow({
             </span>
           )}
           <span className={`font-mono text-sm font-semibold ${color ?? 'text-white'}`}>
-            {value.toFixed(2)}{unit}
+            {value.toFixed(4)}{unit}
           </span>
         </div>
       ) : (

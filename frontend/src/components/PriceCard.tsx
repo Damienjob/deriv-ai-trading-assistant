@@ -56,13 +56,13 @@ export function PriceCard() {
         <div>
           <p className="text-gray-400 text-sm mb-1">Prix actuel</p>
           <p className="text-white text-5xl font-mono font-bold tracking-tight">
-            {currentTick ? currentTick.price.toFixed(2) : '----.--'}
+            {currentTick ? currentTick.price.toFixed(4) : '----.----'}
           </p>
         </div>
         {variation && (
           <div className="mb-1">
             <p className={`font-mono font-semibold text-lg ${variation.diff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {variation.diff >= 0 ? '+' : ''}{variation.diff.toFixed(2)}
+              {variation.diff >= 0 ? '+' : ''}{variation.diff.toFixed(4)}
             </p>
             <p className={`font-mono text-sm ${variation.diff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {variation.diff >= 0 ? '+' : ''}{variation.pct.toFixed(3)}%

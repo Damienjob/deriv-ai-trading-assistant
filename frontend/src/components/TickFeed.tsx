@@ -37,7 +37,7 @@ export function TickFeed() {
                     isUp ? 'text-green-400' : 'text-red-400'
                   }`}
                 >
-                  {isUp ? '▲' : '▼'} {tick.price.toFixed(2)}
+                  {isUp ? '▲' : '▼'} {tick.price.toFixed(4)}
                 </span>
               </div>
             )

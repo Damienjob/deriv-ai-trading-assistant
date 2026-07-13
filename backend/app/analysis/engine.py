@@ -18,6 +18,7 @@ from app.analysis.indicators import (
     atr, bollinger_bands, ema, macd,
     recommended_stake, rsi, support_resistance,
     trend_strength, volatility_regime,
+    detect_fvg, FVG, nearest_fvg,
 )
 from app.analysis.market_context import MarketContext, compute_market_context
 from app.analysis.pending_order import PendingOrder, compute_pending_orders
@@ -40,6 +41,7 @@ class TimeframeAnalysis:
     candle_count: int
     ema20: Optional[float]
     ema50: Optional[float]
+    ema200: Optional[float]   # ajouté
     rsi14: Optional[float]
     macd_line: Optional[float]
     macd_signal: Optional[float]
@@ -66,7 +68,7 @@ class TimeframeAnalysis:
             "granularity": self.granularity,
             "candle_count": self.candle_count,
             "indicators": {
-                "ema20": self.ema20, "ema50": self.ema50,
+                "ema20": self.ema20, "ema50": self.ema50, "ema200": self.ema200,
                 "rsi14": self.rsi14,
                 "macd_line": self.macd_line,
                 "macd_signal": self.macd_signal,
@@ -141,6 +143,8 @@ class MTFResult:
     stake: dict = field(default_factory=dict)
     position: Optional[PositionPlan] = None
     pending_orders: list[PendingOrder] = field(default_factory=list)
+    fvgs: list[FVG] = field(default_factory=list)          # Fair Value Gaps détectés
+    nearest_fvg_entry: Optional[FVG] = None                # FVG optimal pour entrée
 
     def to_dict(self) -> dict:
         return {
@@ -174,12 +178,46 @@ class MTFResult:
             "stake": self.stake,
             "position": self.position.to_dict() if self.position else None,
             "pending_orders": [p.to_dict() for p in self.pending_orders],
+            "fvgs": [f.to_dict() for f in self.fvgs],
+            "nearest_fvg_entry": self.nearest_fvg_entry.to_dict() if self.nearest_fvg_entry else None,
         }
 
 
 # ─────────────────────────────────────────────
 # Analyse d'un seul timeframe
 # ─────────────────────────────────────────────
+
+# Seuils ATR% adaptés aux Synthetic Indices Deriv (plus volatils que le forex)
+_REGIME_THRESHOLDS: dict[str, tuple[float, float]] = {
+    # family -> (calm_max, normal_max)  au-delà = unstable
+    "volatility": (0.10, 0.50),
+    "boom":       (0.20, 0.80),
+    "crash":      (0.20, 0.80),
+    "step":       (0.02, 0.10),
+}
+_DEFAULT_THRESHOLDS = (0.10, 0.50)
+
+_current_asset_family: str = "volatility"   # mis à jour dans analyze()
+
+
+def _volatility_regime_synthetic(
+    highs: list[float], lows: list[float], closes: list[float],
+    period: int = 14, family: str = "volatility",
+) -> dict:
+    """Régime de volatilité calibré pour les Synthetic Indices."""
+    from app.analysis.indicators import atr as calc_atr
+    atr_val = calc_atr(highs, lows, closes, period)
+    if atr_val is None or not closes:
+        return {"regime": "unknown", "label": "Données insuffisantes", "atr_pct": None}
+    atr_pct = (atr_val / closes[-1]) * 100
+    calm_max, normal_max = _REGIME_THRESHOLDS.get(family, _DEFAULT_THRESHOLDS)
+    if atr_pct < calm_max:
+        return {"regime": "calm",     "label": "Calme",       "atr_pct": round(atr_pct, 4)}
+    elif atr_pct < normal_max:
+        return {"regime": "normal",   "label": "Normal",      "atr_pct": round(atr_pct, 4)}
+    else:
+        return {"regime": "unstable", "label": "Instable ⚠",  "atr_pct": round(atr_pct, 4)}
+
 
 def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
     label = TIMEFRAMES.get(granularity, str(granularity))
@@ -190,14 +228,15 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
     if n < 10:
         return None
 
-    e20 = ema(closes, 20)
-    e50 = ema(closes, 50)
-    r14 = rsi(closes, 14)
-    m   = macd(closes)
-    bb  = bollinger_bands(closes, 20)
-    sr  = support_resistance(highs, lows, 30)
+    e20  = ema(closes, 20)
+    e50  = ema(closes, 50)
+    e200 = ema(closes, 200)   # désormais calculé
+    r14  = rsi(closes, 14)
+    m    = macd(closes)
+    bb   = bollinger_bands(closes, 20)
+    sr   = support_resistance(highs, lows, 30)
     atr_v = atr(highs, lows, closes, 14)
-    vol   = volatility_regime(highs, lows, closes, 14)
+    vol   = _volatility_regime_synthetic(highs, lows, closes, 14, _current_asset_family)
     trend = trend_strength(e20, e50)
     price = closes[-1]
 
@@ -234,6 +273,20 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
             if pos < 0.15:   bull += 1; reasons.append(f"Support {sup:.2f}")
             elif pos > 0.85: bear += 1; reasons.append(f"Résistance {res:.2f}")
 
+    # FVG sur ce TF — calculé AVANT la direction finale
+    tf_fvgs = detect_fvg(highs, lows, closes, price, atr_v, max_fvg=3)
+    if atr_v:
+        for fvg in tf_fvgs:
+            dist = abs(fvg.midpoint - price)
+            if dist < atr_v * 0.5:
+                if fvg.direction == "bullish":
+                    bull += 1
+                    reasons.append(f"FVG haussier proche ({fvg.bottom:.4f}–{fvg.top:.4f})")
+                elif fvg.direction == "bearish":
+                    bear += 1
+                    reasons.append(f"FVG baissier proche ({fvg.bottom:.4f}–{fvg.top:.4f})")
+
+    # Direction nette (après FVG)
     total = bull + bear
     if total == 0:   direction, tf_conf = 0, 0
     elif bull > bear: direction, tf_conf = 1, min(int((bull / total) * 100), 100)
@@ -249,6 +302,7 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
         trend=trend["trend"], trend_label=trend["label"], trend_strength=trend["strength"],
         regime=vol["regime"], regime_label=vol["label"], atr_pct=vol["atr_pct"],
         direction=direction, direction_reasons=reasons, tf_confidence=tf_conf,
+        ema200=e200,
     )
 
 
@@ -257,18 +311,22 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
 # ─────────────────────────────────────────────
 
 REGIME_PRIORITY = {"unstable": 3, "normal": 2, "calm": 1, "unknown": 0}
-TF_WEIGHT = {"1h": 4, "15min": 3, "5min": 2, "1min": 1}
+TF_WEIGHT = {"1h": 4, "30min": 3, "15min": 3, "5min": 2, "1min": 1}
 
 
 def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFResult]:
+    global _current_asset_family
     last = tick_store.last
     if not last:
         return None
 
     signal_lock.increment_tick()
     asset = get_asset(symbol)
-    candle_m5 = candle_store.last_candle(300)
-    current_candle_epoch = candle_m5.timestamp if candle_m5 else 0
+    _current_asset_family = asset.family
+
+    # Verrou basé sur M15 (cohérent avec l'analyse qui tourne sur M15)
+    candle_m15 = candle_store.last_candle(900)
+    current_candle_epoch = candle_m15.timestamp if candle_m15 else 0
 
     # ── Signal verrouillé encore valide ? ──
     if not signal_lock.should_recalculate(current_candle_epoch):
@@ -320,6 +378,23 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
                 base_amount=base_amount, signal_type=locked.signal_type,
                 confidence=locked.confidence, regime="normal", mtf_alignment=3,
             )
+            # FVG toujours calculés même pendant le verrou (pour l'affichage graphique)
+            closes_m15_lock = candle_store.get_closes(900)
+            highs_m15_lock  = candle_store.get_highs(900)
+            lows_m15_lock   = candle_store.get_lows(900)
+            if len(closes_m15_lock) >= 3:
+                tf_m15_lock = result.timeframes.get("15min")
+                atr_lock = None
+                if tf_ref:
+                    atr_lock = tf_ref.get("atr")
+                result.fvgs = detect_fvg(
+                    highs=highs_m15_lock, lows=lows_m15_lock, closes=closes_m15_lock,
+                    current_price=last.price, atr_val=atr_lock,
+                    max_fvg=6, lookback=60,
+                )
+                if locked.signal_type in ("BUY", "SELL"):
+                    fvg_dir = "bullish" if locked.signal_type == "BUY" else "bearish"
+                    result.nearest_fvg_entry = nearest_fvg(result.fvgs, last.price, fvg_dir)
             return result
 
     # ── Analyse complète (nouvelle bougie ou premier calcul) ──
@@ -394,10 +469,11 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
             icon = "▲" if tf.direction == 1 else ("▼" if tf.direction == -1 else "◆")
             result.reasons.append(f"[{lbl}] {icon} " + " · ".join(tf.direction_reasons[:2]))
 
-    # ÉTAPE 3 : 3 Stratégies
+    # ÉTAPE 3 : 4 Stratégies
     tf_m15_obj = result.timeframes.get("15min")
     tf_m5_obj  = result.timeframes.get("5min")
     tf_h1_obj  = result.timeframes.get("1h")
+    tf_m30_obj = result.timeframes.get("30min")   # nouveau TF pour P2dro
     if tf_m15_obj:
         closes_m5  = candle_store.get_closes(300)
         opens_m5   = candle_store.get_opens(300)
@@ -408,6 +484,12 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
         highs_h1   = candle_store.get_highs(3600)
         lows_h1    = candle_store.get_lows(3600)
 
+        # Données M30 pour P2dro
+        closes_m30 = candle_store.get_closes(1800)
+        opens_m30  = candle_store.get_opens(1800)
+        highs_m30  = candle_store.get_highs(1800)
+        lows_m30   = candle_store.get_lows(1800)
+
         atr_series = [abs(closes_m15[i] - closes_m15[i-1]) for i in range(1, len(closes_m15))]
         atr_mean   = sum(atr_series[-20:]) / min(len(atr_series), 20) if atr_series else None
 
@@ -416,21 +498,27 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
         result.strategies = run_strategies(
             closes_h1=closes_h1, opens_h1=opens_h1, highs_h1=highs_h1, lows_h1=lows_h1,
             ema50_h1=tf_h1_obj.ema50 if tf_h1_obj else None,
-            ema200_h1=None,
+            ema200_h1=tf_h1_obj.ema200 if tf_h1_obj else None,
             closes_m15=closes_m15, opens_m15=opens_m15, highs_m15=highs_m15, lows_m15=lows_m15,
-            ema20_m15=tf_m15_obj.ema20, ema50_m15=tf_m15_obj.ema50, ema200_m15=None,
+            ema20_m15=tf_m15_obj.ema20, ema50_m15=tf_m15_obj.ema50,
+            ema200_m15=tf_m15_obj.ema200,
             rsi_m15=tf_m15_obj.rsi14,
             support_m15=tf_m15_obj.support, resistance_m15=tf_m15_obj.resistance,
             atr_m15=tf_m15_obj.atr_val, atr_mean_m15=atr_mean,
             closes_m5=closes_m5, opens_m5=opens_m5, highs_m5=highs_m5, lows_m5=lows_m5,
             ema20_m5=tf_m5_obj.ema20 if tf_m5_obj else None,
-            ema50_m5=tf_m5_obj.ema50 if tf_m5_obj else None, ema200_m5=None,
+            ema50_m5=tf_m5_obj.ema50 if tf_m5_obj else None,
+            ema200_m5=tf_m5_obj.ema200 if tf_m5_obj else None,
             rsi_m5=tf_m5_obj.rsi14 if tf_m5_obj else None,
             macd_line_m5=tf_m5_obj.macd_line if tf_m5_obj else None,
             macd_signal_m5=tf_m5_obj.macd_signal if tf_m5_obj else None,
             macd_prev_m5=macd_prev.get("macd_line"),
             macd_signal_prev_m5=macd_prev.get("signal_line"),
             atr_m5=tf_m5_obj.atr_val if tf_m5_obj else None,
+            closes_m30=closes_m30 if closes_m30 else None,
+            opens_m30=opens_m30   if opens_m30  else None,
+            highs_m30=highs_m30   if highs_m30  else None,
+            lows_m30=lows_m30     if lows_m30   else None,
             current_price=last.price,
         )
         strat = result.strategies
@@ -447,7 +535,6 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
             direction=result.signal, n_candles=3,
         )
         if result.confirmation and not result.confirmation.confirmed:
-            # Rétrograder le signal si non confirmé
             result.signal_label = f"Non confirmé — {result.confirmation.consecutive_candles}/3 bougies"
             result.confidence   = max(result.confidence - 20, 30)
 
@@ -490,18 +577,63 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
             current_confidence=result.confidence,
         )
 
-    # ── Verrou ──
-    if result.signal in ("BUY", "SELL"):
+    # ── FVG globaux (sur M15 — meilleur compromis signal/bruit) ──
+    if len(closes_m15) >= 3:
+        atr_m15_val = tf_m15_obj.atr_val if tf_m15_obj else None
+        result.fvgs = detect_fvg(
+            highs=highs_m15, lows=lows_m15, closes=closes_m15,
+            current_price=last.price,
+            atr_val=atr_m15_val,
+            max_fvg=6, lookback=60,
+        )
+        # FVG optimal selon la direction du signal
+        if result.signal in ("BUY", "SELL"):
+            fvg_dir = "bullish" if result.signal == "BUY" else "bearish"
+            result.nearest_fvg_entry = nearest_fvg(result.fvgs, last.price, fvg_dir)
+
+            # Si le prix est sur un FVG fort → bonus de confiance
+            if result.nearest_fvg_entry:
+                f = result.nearest_fvg_entry
+                dist_pct = abs(f.midpoint - last.price) / last.price * 100
+                if dist_pct < 0.1 and f.strength == "strong":
+                    result.confidence = min(result.confidence + 8, 98)
+                    result.reasons.append(f"FVG {f.direction} fort ({f.bottom:.4f}–{f.top:.4f}) confirmé ✓")
+                elif dist_pct < 0.3:
+                    result.confidence = min(result.confidence + 4, 98)
+                    result.reasons.append(f"FVG {f.direction} proche ({f.midpoint:.4f}) ↓{dist_pct:.2f}%")
+
+        # FVG dans les pending orders aussi
+        for fvg in result.fvgs:
+            dist_pct = abs(fvg.midpoint - last.price) / last.price * 100
+            if dist_pct < 0.05:
+                # Le prix est dans la zone FVG → fort signal d'entrée
+                if fvg.direction == "bullish" and result.signal != "SELL":
+                    result.advice = "✅ Prix dans FVG haussier — Entrée BUY optimale"
+                    result.confidence = min(result.confidence + 5, 98)
+                elif fvg.direction == "bearish" and result.signal != "BUY":
+                    result.advice = "✅ Prix dans FVG baissier — Entrée SELL optimale"
+                    result.confidence = min(result.confidence + 5, 98)
+
+    # ── Verrou — seulement si confiance suffisante ──
+    if result.signal in ("BUY", "SELL") and result.confidence >= 60:
         signal_lock.invalidate_on_reversal(result.signal)
-    lock_dur = 300 if result.confidence >= 80 else 180
-    signal_lock.lock(
-        signal_type=result.signal, signal_label=result.signal_label,
-        confidence=result.confidence, advice=result.advice, why=result.why,
-        candle_epoch=current_candle_epoch, duration=lock_dur,
-    )
-    result.signal_locked = False
-    result.signal_remaining = lock_dur if result.signal in ("BUY", "SELL") else 0
-    result.signal_remaining_label = f"{lock_dur // 60}min" if result.signal in ("BUY", "SELL") else ""
+        lock_dur = 900 if result.confidence >= 80 else 600   # 15min ou 10min (aligné M15)
+        signal_lock.lock(
+            signal_type=result.signal, signal_label=result.signal_label,
+            confidence=result.confidence, advice=result.advice, why=result.why,
+            candle_epoch=current_candle_epoch, duration=lock_dur,
+        )
+        result.signal_locked = False
+        result.signal_remaining = lock_dur
+        result.signal_remaining_label = f"{lock_dur // 60}min"
+    else:
+        # Confiance insuffisante → pas de verrou, signal affiché mais non verrouillé
+        signal_lock.lock(
+            signal_type="NEUTRAL", signal_label="", confidence=0,
+            advice="", why="", candle_epoch=current_candle_epoch, duration=0,
+        )
+        result.signal_remaining = 0
+        result.signal_remaining_label = ""
 
     return result
 

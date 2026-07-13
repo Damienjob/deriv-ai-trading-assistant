@@ -61,16 +61,16 @@ function OrderRow({ order }: { order: PendingOrder }) {
       {/* Prix cible */}
       <div className="flex items-end gap-3 mb-2">
         <div>
-          <p className="text-gray-400 text-xs">Prix cible</p>
+          <p className="text-green-400 text-xs mb-1">Prix cible</p>
           <p className={`text-2xl font-mono font-bold ${dir.color}`}>
-            {order.target_price.toFixed(2)}
+            {order.target_price.toFixed(4)}
           </p>
         </div>
         <div className="mb-1">
           <p className="text-gray-500 text-xs">Distance</p>
           <p className="text-gray-300 text-sm font-mono">
             {order.direction === 'BUY' ? '↓' : '↑'} {order.distance_pct.toFixed(3)}%
-            <span className="text-gray-500 ml-1">({order.distance_abs.toFixed(2)})</span>
+            <span className="text-gray-500 ml-1">({order.distance_abs.toFixed(4)})</span>
           </p>
         </div>
       </div>

@@ -13,10 +13,11 @@ const SYMBOL_LABELS: Record<string, string> = {
 }
 
 export function PriceCard() {
-  const { currentTick, ticks, symbol, analysis } = useMarketStore()
+  const { currentTick, ticks, currentSymbol, analysis } = useMarketStore()
 
-  const trend = analysis?.trend
-  const trendConfig = {
+  const tfM15 = analysis?.timeframes?.['15min'] ?? analysis?.timeframes?.['5min']
+  const trend = tfM15?.trend
+  const trendConfig: Record<string, { color: string; icon: string }> = {
     up:      { color: 'text-green-400', icon: '▲' },
     down:    { color: 'text-red-400',   icon: '▼' },
     neutral: { color: 'text-yellow-400', icon: '◆' },
@@ -42,7 +43,7 @@ export function PriceCard() {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="text-white font-bold text-xl">
-            {SYMBOL_LABELS[symbol] ?? symbol}
+            {SYMBOL_LABELS[currentSymbol] ?? currentSymbol}
           </h2>
           <p className="text-gray-400 text-sm mt-0.5">Indice synthétique</p>
         </div>

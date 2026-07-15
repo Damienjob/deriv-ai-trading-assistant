@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: deriv-ai-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DERIV_APP_ID
+        value: "1089"
+      - key: DERIV_API_TOKEN
+        sync: false          # à renseigner manuellement dans le dashboard Render
+      - key: ALLOWED_ORIGINS
+        value: '["https://deriv-ai-trading-assistant.vercel.app","http://localhost:5173"]'

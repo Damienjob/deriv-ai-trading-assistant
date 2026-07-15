@@ -1,10 +1,12 @@
 from pydantic_settings import BaseSettings
+from typing import List
 
 
 class Settings(BaseSettings):
     deriv_app_id: str = "1089"
     deriv_api_token: str = ""
     deriv_ws_url: str = "wss://ws.binaryws.com/websockets/v3"
+    allowed_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
     model_config = {"env_file": ".env"}
 

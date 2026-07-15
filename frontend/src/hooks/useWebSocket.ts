@@ -3,9 +3,13 @@
  */
 import { useEffect, useRef, useCallback } from 'react'
 import { useMarketStore, type Analysis, type Timeframe, type OHLCCandle } from '../store/marketStore'
+import { WS_URL } from '../utils/api'
 
-const WS_URL = (import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000') + '/market/ws'
 const RECONNECT_DELAY = 3000
+
+// Log de démarrage pour diagnostiquer la config en production
+console.info('[WS] VITE_WS_URL =', import.meta.env.VITE_WS_URL ?? '(non défini — fallback localhost)')
+console.info('[WS] URL finale =', WS_URL)
 
 export function useWebSocket() {
   const ws = useRef<WebSocket | null>(null)
@@ -20,12 +24,19 @@ export function useWebSocket() {
     const socket = new WebSocket(WS_URL)
     ws.current = socket
 
-    socket.onopen = () => { setConnected(true); setError(null) }
-    socket.onclose = () => {
+    socket.onopen = () => {
+      console.info('[WS] Connexion établie →', WS_URL)
+      setConnected(true); setError(null)
+    }
+    socket.onclose = (e) => {
+      console.warn('[WS] Connexion fermée — code:', e.code, 'raison:', e.reason || '(aucune)')
       setConnected(false)
       timer.current = setTimeout(connect, RECONNECT_DELAY)
     }
-    socket.onerror = () => setError('Connexion impossible')
+    socket.onerror = (e) => {
+      console.error('[WS] Erreur WebSocket:', e)
+      setError('Connexion impossible')
+    }
 
     socket.onmessage = (e) => {
       try {

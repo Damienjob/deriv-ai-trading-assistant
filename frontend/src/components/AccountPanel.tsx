@@ -2,6 +2,7 @@
  * Panneau compte Deriv — solde, type, positions ouvertes, transactions.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { API_URL } from '../utils/api'
 
 interface AccountInfo {
   loginid: string
@@ -38,7 +39,7 @@ interface Transaction {
   timestamp: number
 }
 
-const API = 'http://localhost:8000'
+const API = API_URL
 
 export function AccountPanel() {
   const [info, setInfo] = useState<AccountInfo | null>(null)

@@ -65,6 +65,10 @@ export function useWebSocket() {
             case 'candle_update':
               store.updateCandle(d.timeframe as Timeframe, d.candle as OHLCCandle)
               break
+            case 'symbol_changed':
+              // Le backend a changé d'actif — on réinitialise l'état local
+              store.setCurrentSymbol(d.symbol as string)
+              break
           }
         } catch (err) {
           console.error('[WS] Parsing error:', err)

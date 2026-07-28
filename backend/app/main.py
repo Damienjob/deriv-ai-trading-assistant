@@ -78,8 +78,14 @@ async def on_tick_received(tick_data: dict):
         from app.analysis.engine import analyze
         from app.routers.market import build_candle_update
 
+        tick_symbol = tick_data.get("symbol", _current_symbol)
+
+        # Ignorer les ticks d'un ancien symbole après un changement d'actif
+        if tick_symbol != _current_symbol:
+            return
+
         tick = Tick(
-            symbol=tick_data.get("symbol", _current_symbol),
+            symbol=tick_symbol,
             price=float(tick_data.get("quote", 0)),
             timestamp=float(tick_data.get("epoch", time.time())),
             pip_size=float(tick_data.get("pip_size", 0.01)),
@@ -174,6 +180,9 @@ async def run_deriv_connection():
 
     while True:
         try:
+            # Lire le symbole courant À CHAQUE boucle — il peut avoir changé via /settings/symbol
+            symbol = _current_symbol
+
             await deriv_client.connect()
 
             # Démarrer listen() EN PREMIER dans une tâche séparée
@@ -185,12 +194,12 @@ async def run_deriv_connection():
 
             # Lancer le polling ticks EN PARALLÈLE de listen()
             # (subscribe:1 non supporté par app_id=1089)
-            asyncio.create_task(deriv_client.poll_ticks(_current_symbol, interval=0.5))
+            asyncio.create_task(deriv_client.poll_ticks(symbol, interval=0.5))
 
             # 30 ticks historiques pour démarrer l'analyse immédiatement
-            await deriv_client.fetch_tick_history(_current_symbol, count=30)
+            await deriv_client.fetch_tick_history(symbol, count=30)
             for gran in TIMEFRAMES:
-                await deriv_client.fetch_candles(_current_symbol, gran, count=200)
+                await deriv_client.fetch_candles(symbol, gran, count=200)
                 await asyncio.sleep(0.5)
 
             # Broadcast snapshot quand les bougies sont prêtes (parallèle)
@@ -277,8 +286,9 @@ async def get_base_amount():
 async def set_symbol(symbol: str):
     """Change l'actif surveillé, vide les stores et force une reconnexion."""
     from app.assets import ASSETS
-    from app.candle_store import candle_store, CandleStore
+    from app.candle_store import candle_store
     from app.analysis.signal_lock import signal_lock
+    import app.routers.market as market_module
     global _current_symbol
 
     if symbol not in ASSETS:
@@ -294,9 +304,8 @@ async def set_symbol(symbol: str):
     for gran in TIMEFRAMES:
         candle_store._stores[gran].clear()
 
-    # Vider le cache snapshot
-    from app.routers.market import _snapshot_cache
-    _snapshot_cache.clear()
+    # Vider le cache snapshot directement dans le module (pas une copie locale)
+    market_module._snapshot_cache.clear()
 
     # Réinitialiser le verrou de signal
     signal_lock._locked = None
@@ -305,6 +314,13 @@ async def set_symbol(symbol: str):
 
     # Force reconnexion — la boucle va redémarrer avec le nouveau symbole
     await deriv_client.disconnect()
+
+    # Notifier tous les clients connectés que l'actif a changé
+    # Le frontend doit vider son état local (ticks, bougies, analyse)
+    await manager.broadcast({
+        "type": "symbol_changed",
+        "symbol": symbol,
+    })
 
     logger.info(f"Actif changé → {symbol}")
     return {"status": "ok", "symbol": _current_symbol}

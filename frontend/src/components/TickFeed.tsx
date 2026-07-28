@@ -26,7 +26,7 @@ export function TickFeed() {
 
             return (
               <div
-                key={tick.timestamp}
+                key={`${tick.timestamp}-${i}`}
                 className={`flex justify-between items-center py-1.5 px-3 rounded-lg text-sm ${
                   i === 0 ? 'bg-gray-700/80' : 'bg-gray-700/30'
                 }`}

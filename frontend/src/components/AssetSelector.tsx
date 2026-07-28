@@ -3,6 +3,7 @@
  */
 import { useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { API_URL } from '../utils/api'
 
 const ASSETS = {
   volatility: [
@@ -51,7 +52,7 @@ export function AssetSelector({ onSelect }: Props) {
     if (symbol === currentSymbol) return
     setLoading(symbol)
     try {
-      await fetch(`http://localhost:8000/settings/symbol?symbol=${symbol}`, { method: 'POST' })
+      await fetch(`${API_URL}/settings/symbol?symbol=${symbol}`, { method: 'POST' })
       onSelect(symbol)
     } catch {
       onSelect(symbol) // mise à jour locale même si backend indisponible

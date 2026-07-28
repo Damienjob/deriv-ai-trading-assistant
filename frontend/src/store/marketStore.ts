@@ -172,13 +172,19 @@ export const useMarketStore = create<MarketState>((set) => ({
   activeTimeframe: '5min',
 
   setTick: (tick, analysis) =>
-    set((state) => ({
-      currentTick: tick,
-      ticks: [...state.ticks.slice(-299), tick],
-      analysis: analysis ?? state.analysis,
-      // Prêt quand on a les bougies + au moins une analyse
-      isReady: state.candlesLoaded && (analysis != null || state.analysis != null),
-    })),
+    set((state) => {
+      // Dédoublonnage : ignorer si le dernier tick a le même timestamp ET le même prix
+      const last = state.ticks[state.ticks.length - 1]
+      if (last && last.timestamp === tick.timestamp && last.price === tick.price) {
+        return analysis ? { analysis } : {}
+      }
+      return {
+        currentTick: tick,
+        ticks: [...state.ticks.slice(-299), tick],
+        analysis: analysis ?? state.analysis,
+        isReady: state.candlesLoaded && (analysis != null || state.analysis != null),
+      }
+    }),
   setConnected: (v) => set({ isConnected: v }),
   setError: (e) => set({ error: e }),
   setBaseAmount: (v) => set({ baseAmount: v }),

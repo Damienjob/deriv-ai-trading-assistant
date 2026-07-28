@@ -185,6 +185,110 @@ def support_resistance(
 
 
 # ─────────────────────────────────────────────
+# ADX — Average Directional Index
+# ─────────────────────────────────────────────
+
+def adx(
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    period: int = 14,
+) -> dict[str, Optional[float]]:
+    """
+    ADX — Average Directional Index (Wilder).
+
+    Mesure la FORCE de la tendance indépendamment de sa direction.
+      ADX < 20  → marché en range (pas de tendance) — éviter EMA/MACD
+      ADX 20-25 → tendance faible en formation
+      ADX 25-40 → tendance modérée à forte ✓
+      ADX > 40  → tendance très forte (potentiel épuisement)
+
+    Retourne :
+      adx_val  : valeur ADX (0-100)
+      plus_di  : +DI (force haussière)
+      minus_di : -DI (force baissière)
+      trend_regime : "ranging" | "weak" | "trending" | "strong"
+    """
+    empty: dict[str, Optional[float]] = {
+        "adx": None, "plus_di": None, "minus_di": None, "trend_regime": None
+    }
+    n = len(closes)
+    if n < period + 1:
+        return empty
+
+    plus_dm_list:  list[float] = []
+    minus_dm_list: list[float] = []
+    tr_list:       list[float] = []
+
+    for i in range(1, n):
+        h_diff = highs[i]  - highs[i - 1]
+        l_diff = lows[i - 1] - lows[i]
+        plus_dm_list.append(h_diff if (h_diff > l_diff and h_diff > 0) else 0.0)
+        minus_dm_list.append(l_diff if (l_diff > h_diff and l_diff > 0) else 0.0)
+        tr_list.append(max(
+            highs[i] - lows[i],
+            abs(highs[i] - closes[i - 1]),
+            abs(lows[i]  - closes[i - 1]),
+        ))
+
+    # Wilder smoothing (première valeur = somme simple des `period` premiers)
+    def _wilder_smooth(data: list[float], p: int) -> list[float]:
+        if len(data) < p:
+            return []
+        smoothed = [sum(data[:p])]
+        for v in data[p:]:
+            smoothed.append(smoothed[-1] - smoothed[-1] / p + v)
+        return smoothed
+
+    atr_s    = _wilder_smooth(tr_list, period)
+    plus_s   = _wilder_smooth(plus_dm_list, period)
+    minus_s  = _wilder_smooth(minus_dm_list, period)
+
+    if not atr_s:
+        return empty
+
+    dx_list: list[float] = []
+    for i in range(len(atr_s)):
+        if atr_s[i] == 0:
+            continue
+        pdi  = 100 * plus_s[i]  / atr_s[i]
+        mdi  = 100 * minus_s[i] / atr_s[i]
+        diff = abs(pdi - mdi)
+        summ = pdi + mdi
+        dx_list.append(100 * diff / summ if summ > 0 else 0.0)
+
+    if len(dx_list) < period:
+        return empty
+
+    # ADX = moyenne lissée des DX
+    adx_val = sum(dx_list[:period]) / period
+    for dx in dx_list[period:]:
+        adx_val = (adx_val * (period - 1) + dx) / period
+
+    # +DI et -DI sur la dernière valeur disponible
+    last = len(atr_s) - 1
+    plus_di  = round(100 * plus_s[last]  / atr_s[last], 2) if atr_s[last] else None
+    minus_di = round(100 * minus_s[last] / atr_s[last], 2) if atr_s[last] else None
+
+    adx_val = round(adx_val, 2)
+    if adx_val < 20:
+        regime = "ranging"
+    elif adx_val < 25:
+        regime = "weak"
+    elif adx_val < 40:
+        regime = "trending"
+    else:
+        regime = "strong"
+
+    return {
+        "adx":          adx_val,
+        "plus_di":      plus_di,
+        "minus_di":     minus_di,
+        "trend_regime": regime,
+    }
+
+
+# ─────────────────────────────────────────────
 # TENDANCE
 # ─────────────────────────────────────────────
 

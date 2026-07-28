@@ -36,16 +36,21 @@ async def websocket_market(websocket: WebSocket):
         else:
             logger.info("Snapshot vide — client recevra le broadcast quand prêt")
 
-        # 2. Tick initial — débloque "Collecte des données marché" immédiatement
+        # 2. Tick initial avec analyse — débloque toutes les étapes du loader
         last = tick_store.last
         if last and last.price > 0:
-            await websocket.send_json({
+            from app.analysis.engine import analyze
+            result = analyze(symbol=last.symbol, base_amount=100.0)
+            msg: dict = {
                 "type": "tick",
                 "symbol": last.symbol,
                 "price": last.price,
                 "timestamp": last.timestamp,
-            })
-            logger.info(f"Tick initial envoyé : {last.symbol} @ {last.price}")
+            }
+            if result:
+                msg["analysis"] = result.to_dict()
+            await websocket.send_json(msg)
+            logger.info(f"Tick initial envoyé : {last.symbol} @ {last.price} ({'avec' if result else 'sans'} analyse)")
 
     except Exception as e:
         logger.warning(f"Envoi initial échoué : {e}")

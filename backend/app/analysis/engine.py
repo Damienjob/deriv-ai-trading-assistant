@@ -15,7 +15,7 @@ from app.analysis.confirmation import (
     check_confirmation, check_invalidation,
 )
 from app.analysis.indicators import (
-    atr, bollinger_bands, ema, macd,
+    adx, atr, bollinger_bands, ema, macd,
     recommended_stake, rsi, support_resistance,
     trend_strength, volatility_regime,
     detect_fvg, FVG, nearest_fvg,
@@ -52,6 +52,10 @@ class TimeframeAnalysis:
     support: Optional[float]
     resistance: Optional[float]
     atr_val: Optional[float]
+    adx_val: Optional[float]          # NOUVEAU — force de tendance
+    adx_plus_di: Optional[float]      # NOUVEAU — +DI
+    adx_minus_di: Optional[float]     # NOUVEAU — -DI
+    adx_regime: Optional[str]         # NOUVEAU — "ranging"|"weak"|"trending"|"strong"
     trend: str
     trend_label: str
     trend_strength: int
@@ -79,6 +83,10 @@ class TimeframeAnalysis:
                 "support": self.support,
                 "resistance": self.resistance,
                 "atr": self.atr_val,
+                "adx": self.adx_val,
+                "adx_plus_di": self.adx_plus_di,
+                "adx_minus_di": self.adx_minus_di,
+                "adx_regime": self.adx_regime,
             },
             "trend": {
                 "direction": self.trend,
@@ -240,12 +248,30 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
     trend = trend_strength(e20, e50)
     price = closes[-1]
 
+    # ── ADX — filtre de force de tendance ──
+    adx_result   = adx(highs, lows, closes, 14)
+    adx_val      = adx_result.get("adx")
+    adx_plus_di  = adx_result.get("plus_di")
+    adx_minus_di = adx_result.get("minus_di")
+    adx_regime   = adx_result.get("trend_regime")  # "ranging"|"weak"|"trending"|"strong"
+
     bull, bear, reasons = 0, 0, []
 
+    # ── Filtre ADX : si le marché est en range, réduire le poids EMA/MACD ──
+    is_ranging = adx_regime == "ranging"  # ADX < 20
+    ema_weight = 1 if is_ranging else 2   # poids réduit en range
+
     if trend["trend"] == "up":
-        bull += 2; reasons.append(f"EMA20 > EMA50 ({trend['strength']}%)")
+        bull += ema_weight
+        reasons.append(f"EMA20 > EMA50 ({trend['strength']}%)")
     elif trend["trend"] == "down":
-        bear += 2; reasons.append(f"EMA20 < EMA50 ({trend['strength']}%)")
+        bear += ema_weight
+        reasons.append(f"EMA20 < EMA50 ({trend['strength']}%)")
+
+    if is_ranging:
+        reasons.append(f"⚠ ADX {adx_val:.1f} — range (EMA/MACD réduits)")
+    elif adx_val is not None:
+        reasons.append(f"ADX {adx_val:.1f} — {adx_regime}")
 
     if r14 is not None:
         if r14 < 30:   bull += 2; reasons.append(f"RSI survendu {r14}")
@@ -256,10 +282,20 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
 
     ml, mh = m["macd_line"], m["histogram"]
     if ml is not None and mh is not None:
-        if ml > 0 and mh > 0:   bull += 2; reasons.append("MACD ↑ accélère")
-        elif ml < 0 and mh < 0: bear += 2; reasons.append("MACD ↓ décélère")
-        elif ml > 0:             bull += 1; reasons.append("MACD positif")
-        elif ml < 0:             bear += 1; reasons.append("MACD négatif")
+        macd_weight = 1 if is_ranging else 2   # poids réduit en range
+        if ml > 0 and mh > 0:   bull += macd_weight; reasons.append("MACD ↑ accélère")
+        elif ml < 0 and mh < 0: bear += macd_weight; reasons.append("MACD ↓ décélère")
+        elif ml > 0:             bull += 1;            reasons.append("MACD positif")
+        elif ml < 0:             bear += 1;            reasons.append("MACD négatif")
+
+    # ── ADX directionnel (+DI / -DI) ──
+    if adx_plus_di is not None and adx_minus_di is not None and not is_ranging:
+        if adx_plus_di > adx_minus_di:
+            bull += 1
+            reasons.append(f"+DI {adx_plus_di:.1f} > -DI {adx_minus_di:.1f}")
+        elif adx_minus_di > adx_plus_di:
+            bear += 1
+            reasons.append(f"-DI {adx_minus_di:.1f} > +DI {adx_plus_di:.1f}")
 
     if bb["lower"] and bb["upper"]:
         if price <= bb["lower"]:   bull += 1; reasons.append("Prix sur BB basse")
@@ -299,6 +335,8 @@ def _analyze_tf(granularity: int) -> Optional[TimeframeAnalysis]:
         macd_line=ml, macd_signal=m["signal_line"], macd_histogram=mh,
         bb_upper=bb["upper"], bb_middle=bb["middle"], bb_lower=bb["lower"],
         support=sup, resistance=res, atr_val=atr_v,
+        adx_val=adx_val, adx_plus_di=adx_plus_di,
+        adx_minus_di=adx_minus_di, adx_regime=adx_regime,
         trend=trend["trend"], trend_label=trend["label"], trend_strength=trend["strength"],
         regime=vol["regime"], regime_label=vol["label"], atr_pct=vol["atr_pct"],
         direction=direction, direction_reasons=reasons, tf_confidence=tf_conf,
@@ -374,10 +412,24 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
                 tick_count=signal_lock.tick_count,
                 invalidation=inv,
             )
-            result.stake = recommended_stake(
-                base_amount=base_amount, signal_type=locked.signal_type,
-                confidence=locked.confidence, regime="normal", mtf_alignment=3,
-            )
+            # Si le signal vient d'être invalidé tick par tick → on affiche NEUTRAL
+            if inv and inv.invalidated:
+                result.signal       = "NEUTRAL"
+                result.signal_label = f"Signal invalidé — {inv.reason}"
+                result.confidence   = 0
+                result.advice       = "⛔ Signal invalidé"
+                result.why          = inv.reason
+                result.stake = {
+                    "amount": 0.0,
+                    "pct_of_capital": 0.0,
+                    "reason": f"Signal invalidé : {inv.reason}",
+                    "enter_now": False,
+                }
+            else:
+                result.stake = recommended_stake(
+                    base_amount=base_amount, signal_type=locked.signal_type,
+                    confidence=locked.confidence, regime="normal", mtf_alignment=3,
+                )
             # FVG toujours calculés même pendant le verrou (pour l'affichage graphique)
             closes_m15_lock = candle_store.get_closes(900)
             highs_m15_lock  = candle_store.get_highs(900)
@@ -437,6 +489,32 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
     result.global_regime       = worst.regime
     result.global_regime_label = worst.regime_label
 
+    # ── GARDE 1 : Volatilité extrême → aucune entrée possible ──
+    # On coupe ici pour ne pas calculer inutilement les étapes suivantes.
+    if result.global_regime == "unstable" or (
+        result.context and result.context.volatility == "extreme"
+    ):
+        result.signal       = "NEUTRAL"
+        result.signal_label = "Volatilité extrême — ne pas entrer"
+        result.advice       = "⛔ Ne pas entrer"
+        ctx_msg = (
+            f"Contexte : {result.context.phase_label}. "
+            f"Structure {result.context.structure_label}. "
+            if result.context else ""
+        )
+        result.why = ctx_msg + "Volatilité trop élevée — attendre la stabilisation."
+        result.stake = recommended_stake(
+            base_amount=base_amount, signal_type="NEUTRAL",
+            confidence=0, regime="unstable", mtf_alignment=0,
+        )
+        signal_lock.lock(
+            signal_type="NEUTRAL", signal_label="", confidence=0,
+            advice="", why="", candle_epoch=current_candle_epoch, duration=0,
+        )
+        result.signal_remaining = 0
+        result.signal_remaining_label = ""
+        return result
+
     def weighted_conf(d: int) -> tuple[int, int]:
         tw, tc, al = 0, 0, 0
         for lbl, tf in result.timeframes.items():
@@ -462,6 +540,20 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
         result.signal_label = "Signal faible — Vente"
     else:
         result.signal = "NEUTRAL"; result.signal_label = "Neutre"
+
+    # ── GARDE 2 : Contexte marché contradictoire avec le signal ──
+    # Structure baissière (LH+LL) + signal BUY = faux signal → bloquer.
+    # Structure haussière (HH+HL) + signal SELL = même chose.
+    if result.context and result.signal in ("BUY", "SELL"):
+        ctx_struct = result.context.structure  # "bullish"|"bearish"|"mixed"|"unknown"
+        if result.signal == "BUY" and ctx_struct == "bearish":
+            result.signal       = "NEUTRAL"
+            result.signal_label = "Structure baissière — BUY bloqué"
+            result.confidence   = 0
+        elif result.signal == "SELL" and ctx_struct == "bullish":
+            result.signal       = "NEUTRAL"
+            result.signal_label = "Structure haussière — SELL bloqué"
+            result.confidence   = 0
 
     for lbl in ["1h", "15min", "5min", "1min"]:
         tf = result.timeframes.get(lbl)
@@ -505,6 +597,8 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
             rsi_m15=tf_m15_obj.rsi14,
             support_m15=tf_m15_obj.support, resistance_m15=tf_m15_obj.resistance,
             atr_m15=tf_m15_obj.atr_val, atr_mean_m15=atr_mean,
+            adx_m15=tf_m15_obj.adx_val,
+            adx_regime_m15=tf_m15_obj.adx_regime,
             closes_m5=closes_m5, opens_m5=opens_m5, highs_m5=highs_m5, lows_m5=lows_m5,
             ema20_m5=tf_m5_obj.ema20 if tf_m5_obj else None,
             ema50_m5=tf_m5_obj.ema50 if tf_m5_obj else None,
@@ -522,27 +616,56 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
             current_price=last.price,
         )
         strat = result.strategies
-        if strat.enter_now and strat.final_direction != "NEUTRAL":
+        # ── GARDE 3 : Scorer bloqué → signal annulé ──
+        # Si les 4 stratégies bloquent (filtered_out), on n'entre pas même si le
+        # MTF vote BUY/SELL. Le scorer a la priorité sur le vote brut des TF.
+        if strat.filtered_out:
+            result.signal       = "NEUTRAL"
+            result.signal_label = "Stratégies bloquées — signal annulé"
+            result.confidence   = max(result.confidence - 30, 0)
+        elif strat.enter_now and strat.final_direction != "NEUTRAL":
             if result.signal == "NEUTRAL" or result.confidence < strat.final_score:
                 result.signal      = strat.final_direction
                 result.signal_label= f"{strat.final_label} — stratégies"
                 result.confidence  = strat.final_score
 
     # ÉTAPE 4 : Confirmation structurelle (N bougies consécutives)
+    # ── GARDE 4 : Confirmation obligatoire pour verrouiller ──
+    # Si le signal n'est pas confirmé sur 3 bougies, on affiche "Non confirmé"
+    # mais on NE pose PAS de verrou et on N'affiche PAS de mise.
+    confirmation_ok = False
     if result.signal in ("BUY", "SELL") and len(closes_m15) >= 30:
         result.confirmation = check_confirmation(
             closes=closes_m15, highs=highs_m15, lows=lows_m15,
             direction=result.signal, n_candles=3,
         )
-        if result.confirmation and not result.confirmation.confirmed:
-            result.signal_label = f"Non confirmé — {result.confirmation.consecutive_candles}/3 bougies"
-            result.confidence   = max(result.confidence - 20, 30)
+        if result.confirmation.confirmed:
+            confirmation_ok = True
+        else:
+            # Signal visible mais non actionnable
+            result.signal_label = (
+                f"Non confirmé — {result.confirmation.consecutive_candles}/3 bougies"
+            )
+            result.confidence = max(result.confidence - 20, 30)
+            # Pas de position, pas de verrou : on traite comme NEUTRAL pour la suite
+            # mais on garde result.signal pour l'affichage (le frontend voit "BUY non confirmé")
+    elif result.signal in ("BUY", "SELL"):
+        # Pas assez de bougies → on considère non confirmé
+        result.signal_label = "Données insuffisantes pour confirmation"
+        result.confidence   = max(result.confidence - 20, 30)
 
     # ── Conseil + Explication ──
-    _build_advice(result, base_amount)
+    _build_advice(result, base_amount, confirmation_ok)
 
-    # ── Plan de position ──
-    if result.signal in ("BUY", "SELL"):
+    # ── Plan de position — SEULEMENT si le signal est réellement actionnable ──
+    # Conditions strictes : signal BUY/SELL + confirmation passée + mise > 0
+    signal_actionnable = (
+        result.signal in ("BUY", "SELL")
+        and confirmation_ok
+        and result.stake.get("enter_now", False)
+    )
+
+    if signal_actionnable:
         ref_tf = result.timeframes.get("5min") or result.timeframes.get("15min")
         atr_ref = ref_tf.atr_val if ref_tf else None
         stake_amount = result.stake.get("amount", 0.0)
@@ -614,8 +737,9 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
                     result.advice = "✅ Prix dans FVG baissier — Entrée SELL optimale"
                     result.confidence = min(result.confidence + 5, 98)
 
-    # ── Verrou — seulement si confiance suffisante ──
-    if result.signal in ("BUY", "SELL") and result.confidence >= 60:
+    # ── Verrou — seulement si signal RÉELLEMENT actionnable ──
+    # Règle : BUY/SELL + confirmation passée + confidence ≥ 60 + mise > 0
+    if signal_actionnable and result.confidence >= 60:
         signal_lock.invalidate_on_reversal(result.signal)
         lock_dur = 900 if result.confidence >= 80 else 600   # 15min ou 10min (aligné M15)
         signal_lock.lock(
@@ -627,28 +751,47 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
         result.signal_remaining = lock_dur
         result.signal_remaining_label = f"{lock_dur // 60}min"
     else:
-        # Confiance insuffisante → pas de verrou, signal affiché mais non verrouillé
+        # Signal non actionnable → pas de verrou, mise affichée à 0
         signal_lock.lock(
             signal_type="NEUTRAL", signal_label="", confidence=0,
             advice="", why="", candle_epoch=current_candle_epoch, duration=0,
         )
         result.signal_remaining = 0
         result.signal_remaining_label = ""
+        # Forcer la mise à 0 si signal non confirmé (évite l'affichage contradictoire)
+        if not confirmation_ok:
+            result.stake = {
+                "amount": 0.0,
+                "pct_of_capital": 0.0,
+                "reason": "⏳ Signal non confirmé — pas d'entrée",
+                "enter_now": False,
+            }
 
     return result
 
 
-def _build_advice(result: MTFResult, base_amount: float = 100.0):
+def _build_advice(result: MTFResult, base_amount: float = 100.0, confirmation_ok: bool = False):
     """Génère l'explication complète avec contexte marché."""
     sig = result.signal
     ctx = result.context
     conf_obj = result.confirmation
 
-    result.stake = recommended_stake(
-        base_amount=base_amount, signal_type=sig,
-        confidence=result.confidence, regime=result.global_regime,
-        mtf_alignment=result.mtf_alignment,
-    )
+    # ── Stake : 0 si signal non actionnable ──
+    # Règle : on n'affiche jamais de mise si confirmation_ok=False ou signal=NEUTRAL
+    if not confirmation_ok or sig not in ("BUY", "SELL"):
+        result.stake = {
+            "amount": 0.0,
+            "pct_of_capital": 0.0,
+            "reason": "⏳ Signal non confirmé — pas d'entrée" if sig in ("BUY", "SELL")
+                      else "⏳ Signal insuffisant — pas d'entrée recommandée",
+            "enter_now": False,
+        }
+    else:
+        result.stake = recommended_stake(
+            base_amount=base_amount, signal_type=sig,
+            confidence=result.confidence, regime=result.global_regime,
+            mtf_alignment=result.mtf_alignment,
+        )
 
     # Message de contexte
     ctx_msg = ""
@@ -665,13 +808,26 @@ def _build_advice(result: MTFResult, base_amount: float = 100.0):
         if conf_obj.confirmed:
             conf_msg = f"✅ Confirmé sur {conf_obj.consecutive_candles} bougies consécutives. "
         else:
-            conf_msg = f"⚠ Confirmation partielle ({conf_obj.consecutive_candles}/3 bougies). "
+            conf_msg = (
+                f"⚠ Confirmation partielle ({conf_obj.consecutive_candles}/3 bougies). "
+            )
 
-    if result.global_regime == "unstable":
+    # ── Cas 1 : Volatilité extrême ──
+    if result.global_regime == "unstable" or (ctx and ctx.volatility == "extreme"):
         result.advice = "⛔ Ne pas entrer"
         result.why = ctx_msg + "Volatilité trop élevée — attendre la stabilisation."
         return
 
+    # ── Cas 2 : Signal bloqué par structure contradictoire ──
+    if ctx and sig == "NEUTRAL" and result.signal_label in (
+        "Structure baissière — BUY bloqué",
+        "Structure haussière — SELL bloqué",
+    ):
+        result.advice = "⛔ Ne pas entrer"
+        result.why = ctx_msg + f"{result.signal_label}. Attendre un alignement entre structure et signal."
+        return
+
+    # ── Cas 3 : Neutre / Attente ──
     if sig == "NEUTRAL":
         bulls = [l for l, tf in result.timeframes.items() if tf.direction == 1]
         bears = [l for l, tf in result.timeframes.items() if tf.direction == -1]
@@ -689,10 +845,21 @@ def _build_advice(result: MTFResult, base_amount: float = 100.0):
         result.why = ctx_msg + "Pas encore assez d'historique."
         return
 
+    # ── Cas 4 : Signal BUY/SELL non confirmé ──
+    if not confirmation_ok:
+        result.advice = "⏳ Ne pas entrer"
+        result.why = (
+            ctx_msg + conf_msg +
+            "Signal visible mais non confirmé sur 3 bougies consécutives. "
+            "Attendre la confirmation avant d'entrer."
+        )
+        return
+
+    # ── Cas 5 : Signal actionnable ──
     direction_word = "HAUSSE" if sig == "BUY" else "BAISSE"
     aligned = result.mtf_alignment
 
-    if aligned >= 3 and (not conf_obj or conf_obj.confirmed):
+    if aligned >= 3:
         result.advice = f"✅ Entrée — {direction_word}"
         result.why = (
             ctx_msg + conf_msg +
@@ -700,7 +867,7 @@ def _build_advice(result: MTFResult, base_amount: float = 100.0):
             f"Confiance {result.confidence}%. "
             f"Mise : {result.stake.get('amount', 0):.2f}$ "
             f"({result.stake.get('pct_of_capital', 0)}% du capital). "
-            f"Signal valable environ {300 if result.confidence >= 80 else 180}s "
+            f"Signal valable environ {900 if result.confidence >= 80 else 600}s "
             f"sauf invalidation."
         )
     elif aligned >= 2:

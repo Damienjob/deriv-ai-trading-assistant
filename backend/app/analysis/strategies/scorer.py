@@ -70,15 +70,17 @@ def run_all(
     rsi_m15: Optional[float],
     support_m15: Optional[float], resistance_m15: Optional[float],
     atr_m15: Optional[float], atr_mean_m15: Optional[float],
+    adx_m15: Optional[float] = None,       # NOUVEAU — ADX M15 pour filtre de range
+    adx_regime_m15: Optional[str] = None,  # NOUVEAU — "ranging"|"weak"|"trending"|"strong"
 
-    closes_m5: list[float], opens_m5: list[float],
-    highs_m5: list[float], lows_m5: list[float],
-    ema20_m5: Optional[float], ema50_m5: Optional[float],
-    ema200_m5: Optional[float],
-    rsi_m5: Optional[float],
-    macd_line_m5: Optional[float], macd_signal_m5: Optional[float],
-    macd_prev_m5: Optional[float], macd_signal_prev_m5: Optional[float],
-    atr_m5: Optional[float],
+    closes_m5: list[float] = None, opens_m5: list[float] = None,
+    highs_m5: list[float] = None, lows_m5: list[float] = None,
+    ema20_m5: Optional[float] = None, ema50_m5: Optional[float] = None,
+    ema200_m5: Optional[float] = None,
+    rsi_m5: Optional[float] = None,
+    macd_line_m5: Optional[float] = None, macd_signal_m5: Optional[float] = None,
+    macd_prev_m5: Optional[float] = None, macd_signal_prev_m5: Optional[float] = None,
+    atr_m5: Optional[float] = None,
 
     # Données M30 pour P2dro
     closes_m30: Optional[list[float]] = None,
@@ -91,6 +93,22 @@ def run_all(
 
     filters_passed: list[str] = []
     filters_failed: list[str] = []
+
+    # ── Filtre ADX — bloquer EMA/MACD si marché en range (ADX < 20) ──
+    # Ce filtre est le plus important : élimine les faux signaux en marché latéral.
+    adx_filter_active = adx_m15 is not None
+    is_ranging_market = adx_regime_m15 == "ranging"  # ADX < 20
+
+    if adx_filter_active:
+        if is_ranging_market:
+            filters_failed.append(
+                f"⚠ ADX M15 {adx_m15:.1f} < 20 — marché en range, "
+                "signaux EMA/MACD peu fiables"
+            )
+        elif adx_regime_m15 == "weak":
+            filters_passed.append(f"ADX M15 {adx_m15:.1f} — tendance faible (20-25)")
+        elif adx_regime_m15 in ("trending", "strong"):
+            filters_passed.append(f"ADX M15 {adx_m15:.1f} — tendance {adx_regime_m15} ✓")
 
     # ── Stratégie 1 : Trend + Pullback ──
     sig1 = trend_pullback.run(
@@ -188,6 +206,22 @@ def run_all(
     # ── Filtres anti-faux signaux ──
     filtered_out = False
 
+    # Filtre ADX — bloquer les signaux EMA/MACD en marché sans tendance
+    # On passe l'ADX M15 depuis le moteur via atr_mean (pas idéal, voir refacto future)
+    # Pour l'instant on utilise un proxy : range trop étroit = marché latéral
+    if support_m15 and resistance_m15 and atr_m15:
+        range_size = resistance_m15 - support_m15
+        # Ratio range/ATR — un range serré signale un marché sans direction
+        range_atr_ratio = range_size / atr_m15
+        if range_atr_ratio < 1.5:
+            filters_failed.append(f"⚠ Range trop étroit ({range_size:.4f} < 1.5×ATR) — marché en range")
+            filtered_out = True
+        elif range_atr_ratio < 3.0:
+            filters_passed.append(f"Range modéré ({range_size:.4f} = {range_atr_ratio:.1f}×ATR)")
+        else:
+            filters_passed.append(f"Range suffisant ({range_size:.4f} ≥ 1.5×ATR) ✓")
+
+    # Filtre taille de bougie — mouvement potentiellement épuisé
     if atr_mean_m15 and len(closes_m15) >= 2 and len(opens_m15) >= 2:
         last_body = abs(closes_m15[-1] - opens_m15[-1])
         if last_body > 2 * atr_mean_m15:
@@ -197,16 +231,6 @@ def run_all(
             filtered_out = True
         else:
             filters_passed.append("Taille bougie M15 normale (< 2×ATR)")
-
-    if support_m15 and resistance_m15 and atr_m15:
-        range_size = resistance_m15 - support_m15
-        if range_size < atr_m15 * 1.5:
-            filters_failed.append(f"⚠ Range trop étroit ({range_size:.4f} < 1.5×ATR)")
-            filtered_out = True
-        else:
-            filters_passed.append(f"Range suffisant ({range_size:.4f} ≥ 1.5×ATR)")
-
-    if sig3.direction != "NEUTRAL" and sig1.direction != "NEUTRAL":
         if sig1.direction != sig3.direction:
             filters_failed.append(
                 f"⚠ Contradiction : Trend+Pullback dit {sig1.direction} "

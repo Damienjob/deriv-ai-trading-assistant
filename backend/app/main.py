@@ -85,11 +85,11 @@ async def on_tick_received(tick_data: dict):
             pip_size=float(tick_data.get("pip_size", 0.01)),
         )
         if tick.price == 0:
-            return  # ignorer les ticks sans prix
+            return
 
-        # Ignorer si même epoch que le dernier tick (poll dupliqué)
+        # Ignorer seulement si epoch ET prix identiques (vrai doublon)
         last = tick_store.last
-        if last and last.timestamp == tick.timestamp:
+        if last and last.timestamp == tick.timestamp and last.price == tick.price:
             return
 
         tick_store.add(tick)
@@ -185,7 +185,7 @@ async def run_deriv_connection():
 
             # Lancer le polling ticks EN PARALLÈLE de listen()
             # (subscribe:1 non supporté par app_id=1089)
-            asyncio.create_task(deriv_client.poll_ticks(_current_symbol, interval=1.0))
+            asyncio.create_task(deriv_client.poll_ticks(_current_symbol, interval=0.5))
 
             # 30 ticks historiques pour démarrer l'analyse immédiatement
             await deriv_client.fetch_tick_history(_current_symbol, count=30)

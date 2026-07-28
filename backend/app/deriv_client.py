@@ -104,22 +104,19 @@ async def _process_history_as_tick(msg: dict):
     if not prices or not times:
         return
 
-    # Dernier prix uniquement (count=1 dans le poll)
-    last_price = float(prices[-1])
-    last_time  = float(times[-1])
-
-    # Formater comme un tick Deriv standard
-    tick_data = {
-        "symbol": symbol,
-        "quote":  last_price,
-        "epoch":  last_time,
-        "pip_size": 0.01,
-    }
-    for cb in _tick_callbacks:
-        try:
-            await cb(tick_data)
-        except Exception as e:
-            logger.error(f"Erreur callback tick (poll) : {e}")
+    # Traiter tous les prix (count=2) — le plus récent en dernier
+    for i in range(len(prices)):
+        tick_data = {
+            "symbol": symbol,
+            "quote":  float(prices[i]),
+            "epoch":  float(times[i]),
+            "pip_size": 0.01,
+        }
+        for cb in _tick_callbacks:
+            try:
+                await cb(tick_data)
+            except Exception as e:
+                logger.error(f"Erreur callback tick (poll) : {e}")
 
 
 async def _process_tick_history(msg: dict):
@@ -147,6 +144,12 @@ async def _process_tick_history(msg: dict):
             pip_size=0.01,
         )
         tick_store.add(tick)
+
+    # Pré-remplir le tick_count du signal_lock avec les ticks historiques
+    # pour ne pas attendre 30 ticks en temps réel
+    from app.analysis.signal_lock import signal_lock
+    for _ in range(count):
+        signal_lock.increment_tick()
 
     logger.info(f"[HISTORY] {count} ticks historiques chargés pour {symbol} — dernier prix: {float(prices[-1])}")
 
@@ -221,7 +224,7 @@ class DerivClient:
             try:
                 await self._send({
                     "ticks_history": symbol,
-                    "count": 1,
+                    "count": 2,
                     "end": "latest",
                     "style": "ticks",
                 })

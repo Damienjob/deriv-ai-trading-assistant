@@ -48,25 +48,8 @@ export function SignalCard() {
     regime?.regime === 'unstable' ? 'text-red-400' :
     regime?.regime === 'calm'     ? 'text-green-400' : 'text-yellow-400'
 
-  // Phase de collecte
-  if (tickCount < 30) {
-    return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5 flex flex-col gap-3">
-        <h3 className="text-gray-300 font-semibold text-sm">Signal</h3>
-        <div className="flex flex-col items-center justify-center py-6 gap-3">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400 text-sm">Collecte des données...</p>
-          <p className="text-gray-600 text-xs">{tickCount}/30 ticks reçus</p>
-          <div className="w-full bg-gray-700 rounded-full h-1.5">
-            <div
-              className="h-1.5 rounded-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${(tickCount / 30) * 100}%` }}
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Afficher directement le signal — on a déjà les bougies historiques
+  // Le compteur tick_count est obsolète depuis l'ajout de fetch_tick_history
 
   return (
     <div className={`rounded-2xl border p-5 flex flex-col gap-3 ${cfg.bg} ${cfg.border}`}>

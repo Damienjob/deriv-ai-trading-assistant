@@ -39,7 +39,7 @@ export function SignalCard() {
   const isLocked = stability?.locked ?? false
   const remaining = stability?.remaining_seconds ?? 0
   const remainingLabel = stability?.remaining_label ?? ''
-  const tickCount = stability?.tick_count ?? 0
+  // const tickCount = stability?.tick_count ?? 0
   const LOCK_TOTAL = sigType === 'BUY' || sigType === 'SELL'
     ? (analysis?.signal.confidence ?? 0) >= 80 ? 300 : 180
     : 0

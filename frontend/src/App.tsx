@@ -9,6 +9,7 @@
 import { useState } from 'react'
 import { useWebSocket } from './hooks/useWebSocket'
 import { useMarketStore } from './store/marketStore'
+import { AppLoader } from './components/AppLoader'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { DecisionBanner } from './components/DecisionBanner'
 import { PriceCard } from './components/PriceCard'
@@ -23,14 +24,17 @@ import { PendingOrdersCard } from './components/PendingOrdersCard'
 import { StrategiesPanel } from './components/StrategiesPanel'
 import { MarketContextCard } from './components/MarketContextCard'
 import { ConfirmationCard } from './components/ConfirmationCard'
-import { AccountPanel } from './components/AccountPanel'
-import { AccountWidget } from './components/AccountWidget'
 import { FVGPanel } from './components/FVGPanel'
 
 export default function App() {
   useWebSocket()
-  const { setCurrentSymbol, currentSymbol, analysis } = useMarketStore()
+  const { isReady, setCurrentSymbol, currentSymbol, analysis } = useMarketStore()
   const [showDetails, setShowDetails] = useState(false)
+
+  // Afficher le loader tant que les données ne sont pas prêtes
+  if (!isReady) {
+    return <AppLoader />
+  }
 
   const sigType        = analysis?.signal.type ?? 'WAIT'
   const signalWeak     = !analysis || sigType === 'NEUTRAL' || sigType === 'WAIT' || analysis.signal.confidence < 70
@@ -60,9 +64,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Compte Deriv + Connexion */}
+          {/* Connexion */}
           <div className="flex items-center gap-3">
-            <AccountWidget onOpenDetails={() => setShowDetails(true)} />
             <ConnectionStatus />
           </div>
         </div>
@@ -112,9 +115,6 @@ export default function App() {
         {/* ── Détails dépliables ── */}
         {showDetails && (
           <div className="space-y-4">
-
-            {/* Compte Deriv */}
-            <AccountPanel />
 
             {/* Signal faible → ordres en attente */}
             {signalWeak && <PendingOrdersCard />}

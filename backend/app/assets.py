@@ -25,7 +25,7 @@ class Asset:
 
 
 ASSETS: dict[str, Asset] = {
-    # ── Volatility Indices ──────────────────────────────
+    # ── Volatility Indices (symboles standards — nécessitent un app_id enregistré) ──
     "R_10": Asset(
         symbol="R_10", label="Volatility 10 Index", family="volatility",
         description="Volatilité simulée 10% — mouvements lents, adapté aux débutants",
@@ -66,7 +66,7 @@ ASSETS: dict[str, Asset] = {
         min_duration=1, max_duration=30,
         volatility_factor=2.0,
     ),
-    # ── Volatility (1s) ─────────────────────────────────
+    # ── Volatility (1s) — accessibles avec app_id de démo ────────────────────────
     "1HZ10V": Asset(
         symbol="1HZ10V", label="Volatility 10 (1s)", family="volatility",
         description="V10 sur ticks de 1 seconde — ultra court terme",
@@ -74,6 +74,30 @@ ASSETS: dict[str, Asset] = {
         risk_profile="moderate",
         min_duration=1, max_duration=30,
         volatility_factor=1.5,
+    ),
+    "1HZ25V": Asset(
+        symbol="1HZ25V", label="Volatility 25 (1s)", family="volatility",
+        description="V25 sur ticks de 1 seconde",
+        pip_size=0.001, typical_spread=0.5,
+        risk_profile="moderate",
+        min_duration=1, max_duration=30,
+        volatility_factor=1.5,
+    ),
+    "1HZ50V": Asset(
+        symbol="1HZ50V", label="Volatility 50 (1s)", family="volatility",
+        description="V50 sur ticks de 1 seconde — le plus utilisé en démo",
+        pip_size=0.01, typical_spread=1.0,
+        risk_profile="high",
+        min_duration=1, max_duration=60,
+        volatility_factor=1.5,
+    ),
+    "1HZ75V": Asset(
+        symbol="1HZ75V", label="Volatility 75 (1s)", family="volatility",
+        description="V75 sur ticks de 1 seconde",
+        pip_size=0.01, typical_spread=1.5,
+        risk_profile="high",
+        min_duration=1, max_duration=30,
+        volatility_factor=1.8,
     ),
     "1HZ100V": Asset(
         symbol="1HZ100V", label="Volatility 100 (1s)", family="volatility",

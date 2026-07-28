@@ -6,13 +6,16 @@ import { useMarketStore } from '../store/marketStore'
 
 const ASSETS = {
   volatility: [
-    { symbol: 'R_10',    label: 'V10',   desc: 'Volatilité 10%' },
-    { symbol: 'R_25',    label: 'V25',   desc: 'Volatilité 25%' },
-    { symbol: 'R_50',    label: 'V50',   desc: 'Volatilité 50%' },
-    { symbol: 'R_75',    label: 'V75',   desc: 'Volatilité 75%' },
-    { symbol: 'R_100',   label: 'V100',  desc: 'Volatilité 100%' },
-    { symbol: '1HZ10V',  label: 'V10(1s)',  desc: '1 seconde' },
-    { symbol: '1HZ100V', label: 'V100(1s)', desc: '1 seconde' },
+    { symbol: 'R_10',    label: 'V10',      desc: 'Volatilité 10% — nécessite un vrai compte' },
+    { symbol: 'R_25',    label: 'V25',      desc: 'Volatilité 25% — nécessite un vrai compte' },
+    { symbol: 'R_50',    label: 'V50',      desc: 'Volatilité 50% — nécessite un vrai compte' },
+    { symbol: 'R_75',    label: 'V75',      desc: 'Volatilité 75% — nécessite un vrai compte' },
+    { symbol: 'R_100',   label: 'V100',     desc: 'Volatilité 100% — nécessite un vrai compte' },
+    { symbol: '1HZ10V',  label: 'V10(1s)',  desc: 'Volatilité 10 — 1 seconde (démo OK)' },
+    { symbol: '1HZ25V',  label: 'V25(1s)',  desc: 'Volatilité 25 — 1 seconde (démo OK)' },
+    { symbol: '1HZ50V',  label: 'V50(1s)',  desc: 'Volatilité 50 — 1 seconde (démo OK) ★' },
+    { symbol: '1HZ75V',  label: 'V75(1s)',  desc: 'Volatilité 75 — 1 seconde (démo OK)' },
+    { symbol: '1HZ100V', label: 'V100(1s)', desc: 'Volatilité 100 — 1 seconde (démo OK)' },
   ],
   boom: [
     { symbol: 'BOOM300N',  label: 'Boom 300',  desc: '~1 spike / 300 ticks' },

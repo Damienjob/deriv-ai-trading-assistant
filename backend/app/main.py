@@ -16,10 +16,32 @@ from app.connection_manager import manager
 from app.deriv_client import DerivClient, on_tick
 from app.tick_store import Tick, tick_store
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-)
+import colorlog
+
+# ── Logging formaté avec couleurs ──────────────────────────────────────────────
+_handler = colorlog.StreamHandler()
+_handler.setFormatter(colorlog.ColoredFormatter(
+    fmt="%(asctime)s %(log_color)s%(levelname)-8s%(reset)s %(cyan)s%(name)s%(reset)s  %(message)s",
+    datefmt="%H:%M:%S",
+    log_colors={
+        "DEBUG":    "white",
+        "INFO":     "bold_green",
+        "WARNING":  "bold_yellow",
+        "ERROR":    "bold_red",
+        "CRITICAL": "bold_red,bg_white",
+    },
+))
+
+logging.basicConfig(handlers=[_handler], level=logging.INFO)
+
+# Niveau DEBUG uniquement sur le client Deriv
+logging.getLogger("app.deriv_client").setLevel(logging.DEBUG)
+
+# Réduire le bruit des libs tierces
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+logging.getLogger("watchfiles").setLevel(logging.WARNING)
+logging.getLogger("websockets").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -47,41 +69,52 @@ deriv_client = DerivClient()
 
 # État utilisateur (modifiable via API)
 _base_amount: float = 100.0
-_current_symbol: str = "R_50"
+_current_symbol: str = "1HZ50V"
 
 
 async def on_tick_received(tick_data: dict):
-    """Callback tick → analyse MTF → broadcast tick + bougie courante."""
-    from app.analysis.engine import analyze
-    from app.routers.market import build_candle_update
+    """Callback tick temps réel → analyse MTF → broadcast."""
+    try:
+        from app.analysis.engine import analyze
+        from app.routers.market import build_candle_update
 
-    tick = Tick(
-        symbol=tick_data.get("symbol", "R_50"),
-        price=float(tick_data.get("quote", 0)),
-        timestamp=float(tick_data.get("epoch", time.time())),
-        pip_size=float(tick_data.get("pip_size", 0.01)),
-    )
-    tick_store.add(tick)
+        tick = Tick(
+            symbol=tick_data.get("symbol", _current_symbol),
+            price=float(tick_data.get("quote", 0)),
+            timestamp=float(tick_data.get("epoch", time.time())),
+            pip_size=float(tick_data.get("pip_size", 0.01)),
+        )
+        if tick.price == 0:
+            return  # ignorer les ticks sans prix
 
-    result = analyze(symbol=tick.symbol, base_amount=_base_amount)
+        # Ignorer si même epoch que le dernier tick (poll dupliqué)
+        last = tick_store.last
+        if last and last.timestamp == tick.timestamp:
+            return
 
-    # Message principal : tick + analyse
-    message: dict = {
-        "type": "tick",
-        "symbol": tick.symbol,
-        "price": tick.price,
-        "timestamp": tick.timestamp,
-    }
-    if result:
-        message["analysis"] = result.to_dict()
+        tick_store.add(tick)
 
-    await manager.broadcast(message)
+        result = analyze(symbol=tick.symbol, base_amount=_base_amount)
 
-    # Mise à jour de la bougie en cours sur chaque TF
-    for gran in TIMEFRAMES:
-        candle_msg = build_candle_update(gran)
-        if candle_msg:
-            await manager.broadcast(candle_msg)
+        message: dict = {
+            "type": "tick",
+            "symbol": tick.symbol,
+            "price": tick.price,
+            "timestamp": tick.timestamp,
+        }
+        if result:
+            message["analysis"] = result.to_dict()
+
+        await manager.broadcast(message)
+
+        # Broadcast mise à jour bougie en cours (dernière bougie de chaque TF)
+        for gran in TIMEFRAMES:
+            candle_msg = build_candle_update(gran)
+            if candle_msg:
+                await manager.broadcast(candle_msg)
+
+    except Exception as e:
+        logger.error(f"Erreur on_tick_received : {e}", exc_info=True)
 
 
 async def _connect_account(mgr):
@@ -97,6 +130,26 @@ async def _connect_account(mgr):
     logger.error("Impossible de connecter le compte après 3 tentatives")
 
 
+async def _broadcast_snapshot_when_ready():
+    """
+    Attend que toutes les bougies soient chargées puis broadcast le snapshot.
+    Tourne en parallèle de listen() pour ne pas bloquer la réception des messages.
+    """
+    from app.routers.market import _build_candles_snapshot
+    for _ in range(60):  # max 30s
+        await asyncio.sleep(0.5)
+        snapshot = _build_candles_snapshot()  # met aussi à jour _snapshot_cache
+        if len(snapshot) == len(TIMEFRAMES):
+            await manager.broadcast({"type": "candles_snapshot", "data": snapshot})
+            logger.info(f"Snapshot bougies broadcasté ({len(snapshot)} TF)")
+            return
+    # Broadcast partiel si on n'a pas tous les TF
+    snapshot = _build_candles_snapshot()
+    if snapshot:
+        await manager.broadcast({"type": "candles_snapshot", "data": snapshot})
+        logger.warning(f"Snapshot partiel broadcasté ({len(snapshot)}/{len(TIMEFRAMES)} TF)")
+
+
 async def run_deriv_connection():
     """Connexion Deriv avec reconnexion automatique."""
     on_tick(on_tick_received)
@@ -104,24 +157,29 @@ async def run_deriv_connection():
     while True:
         try:
             await deriv_client.connect()
-            await deriv_client.subscribe_ticks(_current_symbol)
+
+            # Démarrer listen() EN PREMIER dans une tâche séparée
+            # pour capturer toutes les réponses dès la première souscription
+            listen_task = asyncio.create_task(deriv_client.listen())
+
+            # Petite pause pour que listen() soit bien démarré
+            await asyncio.sleep(0.2)
+
+            # Lancer le polling ticks EN PARALLÈLE de listen()
+            # (subscribe:1 non supporté par app_id=1089)
+            asyncio.create_task(deriv_client.poll_ticks(_current_symbol, interval=1.0))
+
+            # 30 ticks historiques pour démarrer l'analyse immédiatement
+            await deriv_client.fetch_tick_history(_current_symbol, count=30)
             for gran in TIMEFRAMES:
                 await deriv_client.fetch_candles(_current_symbol, gran, count=200)
                 await asyncio.sleep(0.5)
 
-            # Envoyer le snapshot des bougies à tous les clients connectés
-            # (utile quand on change d'actif en cours de session)
-            await asyncio.sleep(1.0)  # laisser le temps aux bougies d'arriver
-            from app.routers.market import _build_candles_snapshot
-            snapshot = _build_candles_snapshot()
-            if snapshot:
-                await manager.broadcast({
-                    "type": "candles_snapshot",
-                    "data": snapshot,
-                })
-                logger.info(f"Snapshot bougies broadcasté pour {_current_symbol}")
+            # Broadcast snapshot quand les bougies sont prêtes (parallèle)
+            asyncio.create_task(_broadcast_snapshot_when_ready())
 
-            await deriv_client.listen()
+            # Attendre la fin de listen() (déconnexion ou erreur)
+            await listen_task
 
         except Exception as e:
             logger.error(f"Erreur connexion Deriv : {e}")
@@ -217,6 +275,10 @@ async def set_symbol(symbol: str):
     # Réinitialiser le candle store
     for gran in TIMEFRAMES:
         candle_store._stores[gran].clear()
+
+    # Vider le cache snapshot
+    from app.routers.market import _snapshot_cache
+    _snapshot_cache.clear()
 
     # Réinitialiser le verrou de signal
     signal_lock._locked = None

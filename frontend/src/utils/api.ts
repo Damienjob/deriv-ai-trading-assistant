@@ -3,9 +3,10 @@
  * En production : VITE_WS_URL=wss://deriv-ai-trading-assistant-1.onrender.com
  * En local      : fallback sur localhost
  */
-const BASE = import.meta.env.VITE_WS_URL
-  ? import.meta.env.VITE_WS_URL.replace(/^wss?:\/\//, 'https://')
-  : 'http://localhost:8000'
+const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000'
 
-export const API_URL = BASE
-export const WS_URL  = (import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000') + '/market/ws'
+// Convertir ws:// → http://, wss:// → https://
+const HTTP_BASE = WS_BASE.replace(/^ws:\/\//, 'http://').replace(/^wss:\/\//, 'https://')
+
+export const API_URL = HTTP_BASE
+export const WS_URL  = WS_BASE + '/market/ws'

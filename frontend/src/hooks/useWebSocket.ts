@@ -1,77 +1,87 @@
 /**
  * Hook WebSocket — reçoit ticks, analyse, bougies OHLC, mises à jour bougies.
  */
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMarketStore, type Analysis, type Timeframe, type OHLCCandle } from '../store/marketStore'
 import { WS_URL } from '../utils/api'
 
 const RECONNECT_DELAY = 3000
 
-// Log de démarrage pour diagnostiquer la config en production
 console.info('[WS] VITE_WS_URL =', import.meta.env.VITE_WS_URL ?? '(non défini — fallback localhost)')
 console.info('[WS] URL finale =', WS_URL)
 
 export function useWebSocket() {
-  const ws = useRef<WebSocket | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const {
-    setTick, setConnected, setError,
-    setCandlesSnapshot, updateCandle,
-  } = useMarketStore()
-
-  const connect = useCallback(() => {
-    if (ws.current) ws.current.close()
-    const socket = new WebSocket(WS_URL)
-    ws.current = socket
-
-    socket.onopen = () => {
-      console.info('[WS] Connexion établie →', WS_URL)
-      setConnected(true); setError(null)
-    }
-    socket.onclose = (e) => {
-      console.warn('[WS] Connexion fermée — code:', e.code, 'raison:', e.reason || '(aucune)')
-      setConnected(false)
-      timer.current = setTimeout(connect, RECONNECT_DELAY)
-    }
-    socket.onerror = (e) => {
-      console.error('[WS] Erreur WebSocket:', e)
-      setError('Connexion impossible')
-    }
-
-    socket.onmessage = (e) => {
-      try {
-        const d = JSON.parse(e.data)
-
-        switch (d.type) {
-          // Tick + analyse
-          case 'tick':
-            setTick(
-              { symbol: d.symbol, price: d.price, timestamp: d.timestamp },
-              d.analysis as Analysis | undefined
-            )
-            break
-
-          // Snapshot initial de toutes les bougies (envoyé à la connexion)
-          case 'candles_snapshot':
-            setCandlesSnapshot(d.data as Record<string, OHLCCandle[]>)
-            break
-
-          // Mise à jour d'une bougie en cours (chaque tick)
-          case 'candle_update':
-            updateCandle(d.timeframe as Timeframe, d.candle as OHLCCandle)
-            break
-        }
-      } catch (err) {
-        console.error('[WS] Parsing error:', err)
-      }
-    }
-  }, [setTick, setConnected, setError, setCandlesSnapshot, updateCandle])
+  const ws      = useRef<WebSocket | null>(null)
+  const timer   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dead    = useRef(false)   // true quand le composant est démonté
 
   useEffect(() => {
-    connect()
-    return () => {
-      if (timer.current) clearTimeout(timer.current)
-      ws.current?.close()
+    dead.current = false
+
+    function connect() {
+      if (dead.current) return
+      if (ws.current) {
+        ws.current.onclose = null  // éviter le re-schedule du cleanup
+        ws.current.close()
+      }
+
+      const socket = new WebSocket(WS_URL)
+      ws.current = socket
+
+      socket.onopen = () => {
+        if (dead.current) { socket.close(); return }
+        console.info('[WS] Connexion établie →', WS_URL)
+        useMarketStore.getState().setConnected(true)
+        useMarketStore.getState().setError(null)
+      }
+
+      socket.onclose = (e) => {
+        console.warn('[WS] Connexion fermée — code:', e.code)
+        useMarketStore.getState().setConnected(false)
+        if (!dead.current) {
+          timer.current = setTimeout(connect, RECONNECT_DELAY)
+        }
+      }
+
+      socket.onerror = () => {
+        useMarketStore.getState().setError('Connexion impossible')
+      }
+
+      socket.onmessage = (e) => {
+        if (dead.current) return
+        try {
+          const d = JSON.parse(e.data)
+          const store = useMarketStore.getState()
+          switch (d.type) {
+            case 'tick':
+              store.setTick(
+                { symbol: d.symbol, price: d.price, timestamp: d.timestamp },
+                d.analysis as Analysis | undefined
+              )
+              break
+            case 'candles_snapshot':
+              store.setCandlesSnapshot(d.data as Record<string, OHLCCandle[]>)
+              break
+            case 'candle_update':
+              store.updateCandle(d.timeframe as Timeframe, d.candle as OHLCCandle)
+              break
+          }
+        } catch (err) {
+          console.error('[WS] Parsing error:', err)
+        }
+      }
     }
-  }, [connect])
+
+    connect()
+
+    return () => {
+      dead.current = true
+      if (timer.current) clearTimeout(timer.current)
+      if (ws.current) {
+        ws.current.onclose = null
+        ws.current.close()
+        ws.current = null
+      }
+    }
+  }, [])  // pas de dépendances — se monte une seule fois
 }

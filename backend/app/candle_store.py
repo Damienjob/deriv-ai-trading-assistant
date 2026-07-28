@@ -74,6 +74,29 @@ class CandleStore:
             return store[-1]
         return None
 
+    def build_current_candle(self, granularity: int, ticks: list) -> Optional[Candle]:
+        """
+        Reconstruit la bougie en cours à partir des ticks récents.
+        Utilisé quand subscribe:1 n'est pas disponible (app_id=1089).
+        """
+        if not ticks:
+            return None
+        now = ticks[-1].timestamp
+        candle_start = int(now // granularity) * granularity
+        # Filtrer les ticks de la bougie en cours
+        current = [t for t in ticks if t.timestamp >= candle_start]
+        if not current:
+            return None
+        prices = [t.price for t in current]
+        return Candle(
+            timestamp=candle_start,
+            open=prices[0],
+            high=max(prices),
+            low=min(prices),
+            close=prices[-1],
+            granularity=granularity,
+        )
+
 
 # Instance globale partagée
 candle_store = CandleStore()

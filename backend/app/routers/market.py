@@ -15,40 +15,45 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/market", tags=["market"])
 
+# Cache du dernier snapshot — évite de reconstruire à chaque connexion
+_snapshot_cache: dict = {}
+
 
 @router.websocket("/ws")
 async def websocket_market(websocket: WebSocket):
     """
     WebSocket endpoint pour le frontend.
-    À la connexion, envoie immédiatement l'historique des bougies
-    pour que le graphique s'affiche sans attendre.
+    Envoie le snapshot bougies dès la connexion (depuis le cache ou en le construisant).
     """
     await manager.connect(websocket)
 
-    # Envoi immédiat de l'historique des bougies au client qui vient de se connecter
     try:
-        candles_snapshot = _build_candles_snapshot()
-        if candles_snapshot:
-            await websocket.send_json({
-                "type": "candles_snapshot",
-                "data": candles_snapshot,
-            })
+        # Utiliser le cache si dispo, sinon construire
+        snapshot = _snapshot_cache if _snapshot_cache else _build_candles_snapshot()
+        if snapshot:
+            await websocket.send_json({"type": "candles_snapshot", "data": snapshot})
+            logger.info(f"Snapshot envoyé au client ({len(snapshot)} TF)")
+        else:
+            logger.info("Snapshot vide — client recevra le broadcast quand prêt")
     except Exception as e:
-        logger.warning(f"Impossible d'envoyer le snapshot initial : {e}")
+        logger.warning(f"Snapshot initial échoué : {e}")
 
     try:
         while True:
-            data = await websocket.receive_text()
-            logger.debug(f"Message client reçu : {data}")
+            await websocket.receive_text()
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"Erreur WebSocket inattendue : {e}")
         manager.disconnect(websocket)
 
 
 def _build_candles_snapshot() -> dict:
     """
     Construit le snapshot complet des bougies pour tous les TF.
-    Format compatible avec Lightweight Charts (time + open/high/low/close).
+    Met à jour le cache global au passage.
     """
+    global _snapshot_cache
     snapshot = {}
     for gran, label in TIMEFRAMES.items():
         candles = candle_store.get_candles(gran)
@@ -63,6 +68,8 @@ def _build_candles_snapshot() -> dict:
                 }
                 for c in candles
             ]
+    if snapshot:
+        _snapshot_cache = snapshot
     return snapshot
 
 

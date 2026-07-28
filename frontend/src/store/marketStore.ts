@@ -139,6 +139,8 @@ interface MarketState {
   ticks: Tick[]
   analysis: Analysis | null
   isConnected: boolean
+  isReady: boolean          // true quand bougies + premier tick reçus
+  candlesLoaded: boolean    // true quand le snapshot a été reçu
   error: string | null
   baseAmount: number
   currentSymbol: string
@@ -161,9 +163,11 @@ export const useMarketStore = create<MarketState>((set) => ({
   ticks: [],
   analysis: null,
   isConnected: false,
+  isReady: false,
+  candlesLoaded: false,
   error: null,
   baseAmount: 100,
-  currentSymbol: 'R_50',
+  currentSymbol: '1HZ50V',
   candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
   activeTimeframe: '5min',
 
@@ -172,19 +176,26 @@ export const useMarketStore = create<MarketState>((set) => ({
       currentTick: tick,
       ticks: [...state.ticks.slice(-299), tick],
       analysis: analysis ?? state.analysis,
+      // Prêt quand on a les bougies + au moins une analyse
+      isReady: state.candlesLoaded && (analysis != null || state.analysis != null),
     })),
   setConnected: (v) => set({ isConnected: v }),
   setError: (e) => set({ error: e }),
   setBaseAmount: (v) => set({ baseAmount: v }),
-  setCurrentSymbol: (s) => set({ currentSymbol: s, ticks: [], analysis: null, candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] } }),
+  setCurrentSymbol: (s) => set({
+    currentSymbol: s,
+    ticks: [],
+    analysis: null,
+    isReady: false,
+    candlesLoaded: false,
+    candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
+  }),
 
   setCandlesSnapshot: (data) => set((state) => {
     const candles = { ...state.candles }
     for (const [tf, list] of Object.entries(data)) {
       if (tf in candles) {
-        // Dédoublonner et trier dès la réception
         const seen = new Set<number>()
-
         candles[tf as Timeframe] = (list as OHLCCandle[])
           .sort((a, b) => a.time - b.time)
           .filter(c => {
@@ -194,7 +205,12 @@ export const useMarketStore = create<MarketState>((set) => ({
           })
       }
     }
-    return { candles }
+    const candlesLoaded = Object.values(candles).some(c => c.length > 0)
+    return {
+      candles,
+      candlesLoaded,
+      isReady: candlesLoaded && state.analysis != null,
+    }
   }),
 
   updateCandle: (timeframe, candle) => set((state) => {

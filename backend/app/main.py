@@ -133,16 +133,34 @@ async def _connect_account(mgr):
 async def _broadcast_snapshot_when_ready():
     """
     Attend que toutes les bougies soient chargées puis broadcast le snapshot.
-    Tourne en parallèle de listen() pour ne pas bloquer la réception des messages.
+    Ensuite envoie immédiatement un tick initial avec le prix du dernier tick historique
+    pour que le frontend passe l'étape "Collecte des données marché" sans attendre le poll.
     """
     from app.routers.market import _build_candles_snapshot
+    from app.analysis.engine import analyze
     for _ in range(60):  # max 30s
         await asyncio.sleep(0.5)
-        snapshot = _build_candles_snapshot()  # met aussi à jour _snapshot_cache
+        snapshot = _build_candles_snapshot()
         if len(snapshot) == len(TIMEFRAMES):
             await manager.broadcast({"type": "candles_snapshot", "data": snapshot})
             logger.info(f"Snapshot bougies broadcasté ({len(snapshot)} TF)")
+
+            # Envoyer immédiatement un tick initial depuis l'historique
+            last = tick_store.last
+            if last:
+                result = analyze(symbol=last.symbol, base_amount=_base_amount)
+                msg: dict = {
+                    "type": "tick",
+                    "symbol": last.symbol,
+                    "price": last.price,
+                    "timestamp": last.timestamp,
+                }
+                if result:
+                    msg["analysis"] = result.to_dict()
+                await manager.broadcast(msg)
+                logger.info(f"Tick initial broadcasté : {last.symbol} @ {last.price}")
             return
+
     # Broadcast partiel si on n'a pas tous les TF
     snapshot = _build_candles_snapshot()
     if snapshot:

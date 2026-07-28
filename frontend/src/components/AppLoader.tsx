@@ -8,7 +8,7 @@ import { useMarketStore } from '../store/marketStore'
 const STEPS = [
   { label: 'Connexion au serveur',         check: (s: ReturnType<typeof useMarketStore.getState>) => s.isConnected },
   { label: 'Réception des bougies OHLC',   check: (s: ReturnType<typeof useMarketStore.getState>) => s.candlesLoaded },
-  { label: 'Collecte des données marché',  check: (s: ReturnType<typeof useMarketStore.getState>) => s.ticks.length >= 30 },
+  { label: 'Collecte des données marché',  check: (s: ReturnType<typeof useMarketStore.getState>) => s.ticks.length >= 1 },
   { label: 'Calcul des indicateurs MTF',   check: (s: ReturnType<typeof useMarketStore.getState>) => s.analysis != null },
 ]
 
@@ -82,7 +82,7 @@ export function AppLoader() {
                 {step.label}
                 {active && i === 2 && (
                   <span className="text-blue-400 text-xs ml-1">
-                    ({Math.min(state.ticks.length, 30)}/30 ticks)
+                    {state.ticks.length === 0 ? '(en attente...)' : '(✓)'}
                   </span>
                 )}
                 {active && i !== 2 && <span className="text-blue-400">{dots}</span>}

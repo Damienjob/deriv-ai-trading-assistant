@@ -23,20 +23,32 @@ _snapshot_cache: dict = {}
 async def websocket_market(websocket: WebSocket):
     """
     WebSocket endpoint pour le frontend.
-    Envoie le snapshot bougies dès la connexion (depuis le cache ou en le construisant).
+    Envoie snapshot + tick initial dès la connexion.
     """
     await manager.connect(websocket)
 
     try:
-        # Utiliser le cache si dispo, sinon construire
+        # 1. Snapshot bougies
         snapshot = _snapshot_cache if _snapshot_cache else _build_candles_snapshot()
         if snapshot:
             await websocket.send_json({"type": "candles_snapshot", "data": snapshot})
             logger.info(f"Snapshot envoyé au client ({len(snapshot)} TF)")
         else:
             logger.info("Snapshot vide — client recevra le broadcast quand prêt")
+
+        # 2. Tick initial — débloque "Collecte des données marché" immédiatement
+        last = tick_store.last
+        if last and last.price > 0:
+            await websocket.send_json({
+                "type": "tick",
+                "symbol": last.symbol,
+                "price": last.price,
+                "timestamp": last.timestamp,
+            })
+            logger.info(f"Tick initial envoyé : {last.symbol} @ {last.price}")
+
     except Exception as e:
-        logger.warning(f"Snapshot initial échoué : {e}")
+        logger.warning(f"Envoi initial échoué : {e}")
 
     try:
         while True:

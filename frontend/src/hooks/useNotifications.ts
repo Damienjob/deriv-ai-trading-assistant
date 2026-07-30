@@ -192,10 +192,10 @@ export function useNotifications() {
       const pnlPips = rawDiff / pipSize
 
       // Recalcul TP/SL depuis le prix d'entrée
-      const tpMult  = sig.confidence >= 80 ? 2.5 : sig.confidence >= 60 ? 1.8 : 1.2
-      const slMult  = 1.5
-      const tpDist  = atrVal * tpMult
-      const slDist  = atrVal * slMult
+      const tpMult = sig.confidence >= 80 ? 2.5 : sig.confidence >= 60 ? 1.8 : 1.2
+      const slMult = 1.5
+      const tpDist = atrVal * tpMult
+      const slDist = atrVal * slMult
 
       const tp = pos.direction === 'BUY'
         ? pos.entryPrice + tpDist
@@ -205,8 +205,8 @@ export function useNotifications() {
         : pos.entryPrice + slDist
 
       // Distance en % entre prix actuel et TP / SL
-      const distToTp = Math.abs(price - tp) / price * 100
-      const distToSl = Math.abs(price - sl) / price * 100
+      const distToTp = (Math.abs(price - tp) / price) * 100
+      const distToSl = (Math.abs(price - sl) / price) * 100
 
       const posKey = `pos-${pos.id}`
 
@@ -219,9 +219,13 @@ export function useNotifications() {
         const reason = invalidated
           ? 'Invalidation détectée — conditions cassées'
           : `Signal retourné vers ${sig.type}`
+        
+        // PnL affiché dans la notif
+        const pnlSign = pnlPips >= 0 ? '+' : ''
+        
         sendBrowserNotif(
           `🔴 COUPER POSITION — ${pos.direction} ${pos.lot} lots`,
-          `${currentSymbol} · Entrée : ${pos.entryPrice.toFixed(4)}\n${reason}`,
+          `${currentSymbol} · Entrée : ${pos.entryPrice.toFixed(4)} (${pnlSign}${pnlPips.toFixed(1)} pips)\n${reason}`,
           `${posKey}-urgent`,
         )
         playBeep('urgent')
@@ -267,7 +271,7 @@ export function useNotifications() {
       // Reset de l'état si le prix s'est éloigné
       if (!nearTp && !nearSl && !isOpposed && !invalidated) {
         if (prevPositionReco.current[pos.id] === 'near_tp'
-         || prevPositionReco.current[pos.id] === 'near_sl') {
+        || prevPositionReco.current[pos.id] === 'near_sl') {
           prevPositionReco.current[pos.id] = ''
         }
       }

@@ -25,9 +25,13 @@ import { StrategiesPanel } from './components/StrategiesPanel'
 import { MarketContextCard } from './components/MarketContextCard'
 import { ConfirmationCard } from './components/ConfirmationCard'
 import { FVGPanel } from './components/FVGPanel'
+import { PositionTracker } from './components/PositionTracker'
+import { NotificationPermission } from './components/NotificationPermission'
+import { useNotifications } from './hooks/useNotifications'
 
 export default function App() {
   useWebSocket()
+  useNotifications()
   const { isReady, setCurrentSymbol, currentSymbol, analysis } = useMarketStore()
   const [showDetails, setShowDetails] = useState(false)
 
@@ -66,6 +70,7 @@ export default function App() {
 
           {/* Connexion */}
           <div className="flex items-center gap-3">
+            <NotificationPermission />
             <ConnectionStatus />
           </div>
         </div>
@@ -82,6 +87,9 @@ export default function App() {
 
         {/* ① Bannière de décision — toujours en premier */}
         <DecisionBanner />
+
+        {/* ② Suivi de positions ouvertes — visible si positions saisies */}
+        <PositionTracker />
 
         {/* ② Sélecteur actif + Capital */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

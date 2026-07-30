@@ -14,11 +14,16 @@ from app.analysis.confirmation import (
     ConfirmationResult, InvalidationResult,
     check_confirmation, check_invalidation,
 )
+from app.analysis.price_action_confirm import (
+    PriceActionConfirmation,
+    check_price_action_confirmation,
+)
 from app.analysis.indicators import (
     adx, atr, bollinger_bands, ema, macd,
     recommended_stake, rsi, support_resistance,
     trend_strength, volatility_regime,
     detect_fvg, FVG, nearest_fvg,
+    detect_candle_pattern, detect_order_block, CandlePattern,
 )
 from app.analysis.market_context import MarketContext, compute_market_context
 from app.analysis.pending_order import PendingOrder, compute_pending_orders
@@ -129,6 +134,10 @@ class MTFResult:
 
     # Étape 4 : Confirmation structurelle
     confirmation: Optional[ConfirmationResult] = None
+    confirmation_ok: bool = False   # True uniquement si confirmé sur N bougies
+
+    # Étape 4b : Confirmation Price Action sur M5
+    price_action: Optional[PriceActionConfirmation] = None
 
     # Signal final
     signal: str = "WAIT"
@@ -171,6 +180,8 @@ class MTFResult:
             },
             "strategies": self.strategies.to_dict() if self.strategies else None,
             "confirmation": self.confirmation.to_dict() if self.confirmation else None,
+            "confirmation_ok": self.confirmation_ok,
+            "price_action": self.price_action.to_dict() if self.price_action else None,
             "signal": {
                 "type": self.signal, "label": self.signal_label,
                 "confidence": self.confidence, "reasons": self.reasons,
@@ -655,6 +666,52 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
         result.confidence   = max(result.confidence - 20, 30)
 
     # ── Conseil + Explication ──
+    result.confirmation_ok = confirmation_ok
+
+    # ÉTAPE 4b : Confirmation Price Action sur M5 (détecteur de bougies)
+    # Indépendante de la confirmation indicateurs — donne le feu vert immédiat
+    # dès qu'un pattern (Engulfing, Pinbar, Marubozu) apparaît sur un niveau clé.
+    if result.signal in ("BUY", "SELL"):
+        opens_m5_pa  = candle_store.get_opens(300)
+        highs_m5_pa  = candle_store.get_highs(300)
+        lows_m5_pa   = candle_store.get_lows(300)
+        closes_m5_pa = candle_store.get_closes(300)
+
+        # FVG le plus proche pour le niveau clé
+        fvg_bottom_pa: Optional[float] = None
+        fvg_top_pa:    Optional[float] = None
+        if result.nearest_fvg_entry:
+            fvg_bottom_pa = result.nearest_fvg_entry.bottom
+            fvg_top_pa    = result.nearest_fvg_entry.top
+        elif result.fvgs:
+            # Chercher un FVG dans le bon sens
+            fvg_dir = "bullish" if result.signal == "BUY" else "bearish"
+            for f in result.fvgs:
+                if f.direction == fvg_dir:
+                    fvg_bottom_pa = f.bottom
+                    fvg_top_pa    = f.top
+                    break
+
+        if len(closes_m5_pa) >= 3:
+            result.price_action = check_price_action_confirmation(
+                opens_m5=opens_m5_pa,   highs_m5=highs_m5_pa,
+                lows_m5=lows_m5_pa,     closes_m5=closes_m5_pa,
+                opens_m15=opens_m15,    highs_m15=highs_m15,
+                lows_m15=lows_m15,      closes_m15=closes_m15,
+                direction=result.signal,
+                current_price=last.price,
+                fvg_bottom=fvg_bottom_pa,
+                fvg_top=fvg_top_pa,
+            )
+            # Si Price Action confirme → booste la confiance même si indicateurs pas encore confirmés
+            if result.price_action.confirmed:
+                if not confirmation_ok:
+                    # La PA confirme → on considère le signal actionnable même sans les indicateurs
+                    confirmation_ok = True
+                    result.confirmation_ok = True
+                    result.signal_label = f"Confirmé — {result.price_action.pattern_label}"
+                result.confidence = min(result.confidence + 10, 98)
+
     _build_advice(result, base_amount, confirmation_ok)
 
     # ── Plan de position — SEULEMENT si le signal est réellement actionnable ──

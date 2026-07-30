@@ -3,7 +3,7 @@
  */
 import { useEffect, useRef } from 'react'
 import { useMarketStore, type Analysis, type Timeframe, type OHLCCandle } from '../store/marketStore'
-import { WS_URL } from '../utils/api'
+import { WS_URL, API_URL } from '../utils/api'
 
 const RECONNECT_DELAY = 3000
 
@@ -33,6 +33,13 @@ export function useWebSocket() {
         console.info('[WS] Connexion établie →', WS_URL)
         useMarketStore.getState().setConnected(true)
         useMarketStore.getState().setError(null)
+
+        // Synchroniser le symbole sauvegardé avec le backend au démarrage
+        const savedSymbol = useMarketStore.getState().currentSymbol
+        if (savedSymbol && savedSymbol !== '1HZ50V') {
+          fetch(`${API_URL}/settings/symbol?symbol=${savedSymbol}`, { method: 'POST' })
+            .catch(() => {/* silencieux si le backend n'est pas encore prêt */})
+        }
       }
 
       socket.onclose = (e) => {

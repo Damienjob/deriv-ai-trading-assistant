@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { API_URL } from '../utils/api'
 
 export function CapitalSettings() {
   const { baseAmount, setBaseAmount } = useMarketStore()
@@ -15,7 +16,7 @@ export function CapitalSettings() {
     if (isNaN(val) || val < 1) return
 
     try {
-      await fetch(`http://localhost:8000/settings/amount?amount=${val}`, { method: 'POST' })
+      await fetch(`${API_URL}/settings/amount?amount=${val}`, { method: 'POST' })
       setBaseAmount(val)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

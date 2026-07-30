@@ -1,7 +1,9 @@
 /**
  * Store Zustand — données marché + analyse MTF + settings utilisateur.
+ * currentSymbol et baseAmount sont persistés dans localStorage.
  */
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface Tick {
   symbol: string
@@ -90,11 +92,33 @@ export interface PendingOrder {
   conditions_at_target: string[]
 }
 
+export interface PriceActionResult {
+  confirmed: boolean
+  direction: string
+  pattern: {
+    pattern: string
+    direction: string
+    strength: string
+    label: string
+    body_ratio: number
+    wick_ratio: number
+  } | null
+  pattern_label: string
+  limit_price: number | null
+  limit_type: string
+  limit_label: string
+  sl_price: number | null
+  score: number
+  rationale: string
+}
+
 export interface Analysis {
   indicators: any
   price: number
   timestamp: number
   symbol: string
+  confirmation_ok: boolean        // True = signal confirmé sur N bougies
+  price_action: PriceActionResult | null   // Confirmation Price Action M5
   timeframes: Record<string, TFAnalysis>
   mtf: MTFData
   volatility: { regime: string; label: string }
@@ -158,18 +182,20 @@ interface MarketState {
   setActiveTimeframe: (tf: Timeframe) => void
 }
 
-export const useMarketStore = create<MarketState>((set) => ({
-  currentTick: null,
-  ticks: [],
-  analysis: null,
-  isConnected: false,
-  isReady: false,
-  candlesLoaded: false,
-  error: null,
-  baseAmount: 100,
-  currentSymbol: '1HZ50V',
-  candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
-  activeTimeframe: '5min',
+export const useMarketStore = create<MarketState>()(
+  persist(
+    (set) => ({
+      currentTick: null,
+      ticks: [],
+      analysis: null,
+      isConnected: false,
+      isReady: false,
+      candlesLoaded: false,
+      error: null,
+      baseAmount: 100,
+      currentSymbol: '1HZ50V',
+      candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
+      activeTimeframe: '5min',
 
   setTick: (tick, analysis) =>
     set((state) => {
@@ -237,4 +263,15 @@ export const useMarketStore = create<MarketState>((set) => ({
   }),
 
   setActiveTimeframe: (tf) => set({ activeTimeframe: tf }),
-}))
+    }),
+    {
+      name: 'deriv-market-settings',  // clé localStorage
+      // Ne persister QUE les préférences utilisateur — pas les données live
+      partialize: (state) => ({
+        currentSymbol:   state.currentSymbol,
+        baseAmount:      state.baseAmount,
+        activeTimeframe: state.activeTimeframe,
+      }),
+    }
+  )
+)

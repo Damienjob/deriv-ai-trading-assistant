@@ -289,6 +289,203 @@ def adx(
 
 
 # ─────────────────────────────────────────────
+# PRICE ACTION — Détecteurs de bougies
+# ─────────────────────────────────────────────
+
+from dataclasses import dataclass as _dataclass
+
+
+@_dataclass
+class CandlePattern:
+    """Résultat de détection d'un pattern de bougie."""
+    pattern: str          # "engulfing" | "pinbar" | "marubozu" | "doji" | "order_block" | "none"
+    direction: str        # "bullish" | "bearish" | "neutral"
+    strength: str         # "strong" | "medium" | "weak"
+    label: str            # texte lisible
+    candle_index: int     # index dans la liste (dernière bougie = -1)
+    body_ratio: float     # ratio corps/range total (0-1)
+    wick_ratio: float     # ratio mèche dominante/range total (0-1)
+
+    def to_dict(self) -> dict:
+        return {
+            "pattern":      self.pattern,
+            "direction":    self.direction,
+            "strength":     self.strength,
+            "label":        self.label,
+            "body_ratio":   round(self.body_ratio, 3),
+            "wick_ratio":   round(self.wick_ratio, 3),
+        }
+
+
+def detect_candle_pattern(
+    opens: list[float],
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    atr_val: Optional[float] = None,
+    index: int = -1,  # -1 = dernière bougie fermée (avant la bougie en cours)
+) -> CandlePattern:
+    """
+    Détecte le pattern de la bougie à l'index donné.
+
+    Sur Synthetic Indices on regarde la DERNIÈRE BOUGIE FERMÉE (index=-2
+    si la dernière est en cours, ou index=-1 si toutes sont fermées).
+
+    Patterns détectés :
+      1. Engulfing haussier/baissier — retournement fort
+      2. Pinbar / Marteau — rejet de niveau
+      3. Marubozu / Impulsion — continuation
+      4. Doji — indécision
+      5. Order Block — dernière grande bougie opposée avant un mouvement
+    """
+    n = len(closes)
+    if n < 2:
+        return CandlePattern("none", "neutral", "weak", "Données insuffisantes", -1, 0.0, 0.0)
+
+    # Normalisation de l'index
+    idx = index if index >= 0 else n + index
+    if idx < 1 or idx >= n:
+        idx = n - 1
+
+    o = opens[idx]
+    h = highs[idx]
+    l = lows[idx]
+    c = closes[idx]
+
+    candle_range = h - l
+    if candle_range == 0:
+        return CandlePattern("none", "neutral", "weak", "Bougie vide", idx, 0.0, 0.0)
+
+    body        = abs(c - o)
+    body_ratio  = body / candle_range
+    upper_wick  = h - max(o, c)
+    lower_wick  = min(o, c) - l
+    is_bullish  = c > o
+    is_bearish  = c < o
+
+    # Seuil ATR pour "grande" bougie
+    atr_ref = atr_val if (atr_val and atr_val > 0) else candle_range
+
+    # ── 1. Engulfing ──
+    # Corps actuel englobe COMPLÈTEMENT le corps précédent
+    o_prev = opens[idx - 1]
+    c_prev = closes[idx - 1]
+    body_prev_top = max(o_prev, c_prev)
+    body_prev_bot = min(o_prev, c_prev)
+    body_top = max(o, c)
+    body_bot = min(o, c)
+
+    if (body_top > body_prev_top and body_bot < body_prev_bot
+            and body > body * 0.6):  # corps suffisamment grand
+        if is_bullish and c_prev < o_prev:  # précédente était baissière
+            strength = "strong" if body > atr_ref * 0.8 else "medium"
+            return CandlePattern(
+                "engulfing", "bullish", strength,
+                f"Englobante haussière {'forte' if strength == 'strong' else 'modérée'}",
+                idx, body_ratio, lower_wick / candle_range,
+            )
+        if is_bearish and c_prev > o_prev:  # précédente était haussière
+            strength = "strong" if body > atr_ref * 0.8 else "medium"
+            return CandlePattern(
+                "engulfing", "bearish", strength,
+                f"Englobante baissière {'forte' if strength == 'strong' else 'modérée'}",
+                idx, body_ratio, upper_wick / candle_range,
+            )
+
+    # ── 2. Pinbar / Marteau (mèche ≥ 2× le corps) ──
+    if body > 0:
+        lower_to_body = lower_wick / body
+        upper_to_body = upper_wick / body
+
+        if lower_to_body >= 2.0 and upper_wick < body * 0.5:
+            # Longue mèche basse → rejet support → BUY
+            strength = "strong" if lower_wick > atr_ref * 0.6 else "medium"
+            return CandlePattern(
+                "pinbar", "bullish", strength,
+                f"Pinbar haussier — rejet {'fort' if strength == 'strong' else 'modéré'} du support",
+                idx, body_ratio, lower_wick / candle_range,
+            )
+
+        if upper_to_body >= 2.0 and lower_wick < body * 0.5:
+            # Longue mèche haute → rejet résistance → SELL
+            strength = "strong" if upper_wick > atr_ref * 0.6 else "medium"
+            return CandlePattern(
+                "pinbar", "bearish", strength,
+                f"Pinbar baissier — rejet {'fort' if strength == 'strong' else 'modéré'} de la résistance",
+                idx, body_ratio, upper_wick / candle_range,
+            )
+
+    # ── 3. Marubozu / Bougie d'impulsion (corps > 80% du range) ──
+    if body_ratio >= 0.80 and body > atr_ref * 0.5:
+        direction = "bullish" if is_bullish else "bearish"
+        strength  = "strong" if body > atr_ref * 1.0 else "medium"
+        label_dir = "haussière" if is_bullish else "baissière"
+        return CandlePattern(
+            "marubozu", direction, strength,
+            f"Bougie d'impulsion {label_dir} — forte pression directionnelle",
+            idx, body_ratio, 0.0,
+        )
+
+    # ── 4. Doji (corps < 10% du range) ──
+    if body_ratio < 0.10:
+        return CandlePattern(
+            "doji", "neutral", "weak",
+            "Doji — indécision, attendre la bougie suivante",
+            idx, body_ratio, max(upper_wick, lower_wick) / candle_range,
+        )
+
+    # ── Aucun pattern fort détecté ──
+    return CandlePattern("none", "neutral", "weak", "Pas de pattern notable", idx, body_ratio, 0.0)
+
+
+def detect_order_block(
+    opens: list[float],
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    direction: str,  # "bullish" | "bearish"
+    lookback: int = 10,
+) -> Optional[tuple[float, float, int]]:
+    """
+    Détecte le dernier Order Block dans la direction donnée.
+
+    Order Block haussier : dernière grande bougie BAISSIÈRE avant un mouvement haussier.
+    Order Block baissier : dernière grande bougie HAUSSIÈRE avant un mouvement baissier.
+
+    Retourne (top, bottom, index) ou None si pas trouvé.
+    """
+    n = len(closes)
+    if n < lookback + 1:
+        return None
+
+    start = max(0, n - lookback - 1)
+
+    for i in range(n - 2, start, -1):
+        body = abs(closes[i] - opens[i])
+        candle_range = highs[i] - lows[i]
+        if candle_range == 0:
+            continue
+        body_pct = body / candle_range
+
+        if direction == "bullish":
+            # Cherche la dernière grande bougie baissière (close < open)
+            # suivie d'un mouvement haussier
+            if closes[i] < opens[i] and body_pct > 0.5:
+                # Vérifier qu'il y a un mouvement haussier après
+                if i + 1 < n and closes[i + 1] > closes[i]:
+                    return (round(opens[i], 4), round(closes[i], 4), i)
+
+        else:  # bearish
+            # Cherche la dernière grande bougie haussière (close > open)
+            # suivie d'un mouvement baissier
+            if closes[i] > opens[i] and body_pct > 0.5:
+                if i + 1 < n and closes[i + 1] < closes[i]:
+                    return (round(closes[i], 4), round(opens[i], 4), i)
+
+    return None
+
+
+# ─────────────────────────────────────────────
 # TENDANCE
 # ─────────────────────────────────────────────
 

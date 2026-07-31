@@ -223,3 +223,22 @@ export function IconBarChart(props: Props) {
     </svg>
   )
 }
+
+export function IconHome(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 10v10h14V10" />
+    </svg>
+  )
+}
+
+export function IconMenu(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  )
+}

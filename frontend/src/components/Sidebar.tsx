@@ -33,7 +33,7 @@ export function Sidebar({
       {/* Drawer */}
       <aside
         className={`fixed z-50 inset-y-0 left-0 w-72 flex flex-col
-          bg-[#080b12] border-r border-white/[0.06]
+          bg-[#0d1526] border-r border-white/[0.06]
           transform transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -46,7 +46,7 @@ export function Sidebar({
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-[11px] tracking-widest text-zinc-950 shadow-[0_0_20px_rgba(34,211,238,0.25)]">
                 DA
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#080b12]" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0d1526]" />
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-none">Deriv AI</p>

@@ -44,12 +44,11 @@ export default function App() {
       />
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#080b12]/80 backdrop-blur-xl">
-        <div className="app-container h-14 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur-xl">
+        <div className="app-container h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
 
-          {/* ── LEFT: burger + logo + nav ── */}
-          <div className="flex items-center gap-4 min-w-0">
-
+          {/* ── COL 1 LEFT: burger + logo ── */}
+          <div className="flex items-center gap-3">
             {/* Burger mobile */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -69,61 +68,55 @@ export default function App() {
                 <div className="w-8 h-8 rounded-[10px] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-[10px] tracking-widest text-zinc-950 shadow-[0_0_18px_rgba(34,211,238,0.22)] group-hover:shadow-[0_0_24px_rgba(34,211,238,0.35)] transition-shadow">
                   DA
                 </div>
-                {/* Online dot */}
-                <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-[#080b12] transition-colors ${isConnected ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-[#0d1526] transition-colors ${isConnected ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
               </div>
               <div className="hidden sm:block leading-tight">
                 <p className="text-white font-bold text-[13px] leading-none tracking-tight">Deriv AI</p>
                 <p className="text-zinc-500 text-[10px] leading-none mt-0.5 tracking-wide">Trading Assistant</p>
               </div>
             </button>
-
-            {/* Divider */}
-            <div className="hidden lg:block w-px h-5 bg-white/[0.08] shrink-0" />
-
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-0.5">
-              {NAV.map((item) => {
-                const isActive = item.key === view
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => setView(item.key)}
-                    className={`
-                      group relative flex items-center gap-2 px-3 py-1.5 rounded-lg
-                      text-[13px] font-medium transition-all duration-150
-                      ${isActive
-                        ? 'text-white bg-white/[0.07]'
-                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
-                      }
-                    `}
-                  >
-                    <span className={`transition-colors ${isActive ? 'text-cyan-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
-                      <item.Icon size={14} />
-                    </span>
-                    <span>{item.label}</span>
-                    {item.badge && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none
-                        ${isActive
-                          ? 'bg-cyan-500/20 text-cyan-300'
-                          : 'bg-white/[0.05] text-zinc-500'
-                        }`}>
-                        {item.badge}
-                      </span>
-                    )}
-                    {/* Active underline */}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-3 right-3 h-px bg-cyan-400/60 rounded-full" />
-                    )}
-                  </button>
-                )
-              })}
-            </nav>
           </div>
 
-          {/* ── RIGHT: symbol pill + notifications + status ── */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* ── COL 2 CENTER: nav desktop ── */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV.map((item) => {
+              const isActive = item.key === view
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setView(item.key)}
+                  className={`
+                    group relative flex items-center gap-2 px-4 py-2 rounded-lg
+                    text-[13px] font-medium transition-all duration-150
+                    ${isActive
+                      ? 'text-white bg-white/[0.08]'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
+                    }
+                  `}
+                >
+                  <span className={`transition-colors ${isActive ? 'text-cyan-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                    <item.Icon size={14} />
+                  </span>
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none
+                      ${isActive
+                        ? 'bg-cyan-500/20 text-cyan-300'
+                        : 'bg-white/[0.05] text-zinc-500'
+                      }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-4 right-4 h-px bg-cyan-400/60 rounded-full" />
+                  )}
+                </button>
+              )
+            })}
+          </nav>
 
+          {/* ── COL 3 RIGHT: symbol pill + notifications + status ── */}
+          <div className="flex items-center gap-2 justify-end">
             {/* Symbol + timeframes pill */}
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
@@ -140,6 +133,26 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* ── Subbar mobile : symbole + timeframes (caché sur md+) ── */}
+      {view !== 'home' && (
+        <div className="md:hidden border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur">
+          <div className="app-container h-9 flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+              <span className="text-[12px] font-mono font-semibold text-zinc-200">{currentSymbol}</span>
+            </div>
+            <span className="w-px h-3.5 bg-white/[0.10] shrink-0" />
+            <div className="flex items-center gap-1.5">
+              {['M1','M5','M15','H1'].map(tf => (
+                <span key={tf} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-400 border border-white/[0.06]">
+                  {tf}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Alerte invalidation ── */}
       {isInvalidated && (

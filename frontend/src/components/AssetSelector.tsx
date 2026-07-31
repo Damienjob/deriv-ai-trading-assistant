@@ -34,10 +34,10 @@ const ASSETS = {
 }
 
 const FAMILY_CONFIG = {
-  volatility: { label: 'Volatility', color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20' },
-  boom:       { label: 'Boom',       color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/20' },
-  crash:      { label: 'Crash',      color: 'text-red-400',    bg: 'bg-red-500/10',    border: 'border-red-500/20' },
-  step:       { label: 'Step',       color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+  volatility: { label: 'Volatility', color: 'text-cyan-300',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20' },
+  boom:       { label: 'Boom',       color: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  crash:      { label: 'Crash',      color: 'text-red-300',     bg: 'bg-red-500/10',     border: 'border-red-500/20' },
+  step:       { label: 'Step',       color: 'text-amber-300',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
 }
 
 interface Props {
@@ -62,8 +62,8 @@ export function AssetSelector({ onSelect }: Props) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-      <h3 className="text-gray-300 font-semibold text-sm mb-4">Choisir l'actif</h3>
+    <div className="surface-solid p-5">
+      <h3 className="text-zinc-200 font-semibold text-sm mb-4">Choisir l'actif</h3>
 
       <div className="space-y-4">
         {(Object.entries(ASSETS) as [keyof typeof ASSETS, typeof ASSETS.volatility][]).map(([family, items]) => {
@@ -86,8 +86,8 @@ export function AssetSelector({ onSelect }: Props) {
                       title={desc}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                         isActive
-                          ? `${cfg.bg} ${cfg.color} ${cfg.border} ring-1 ring-offset-1 ring-offset-gray-800 ${cfg.border.replace('border-', 'ring-')}`
-                          : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:bg-gray-700 hover:text-white'
+                          ? `${cfg.bg} ${cfg.color} ${cfg.border} ring-1 ring-offset-2 ring-offset-transparent ${cfg.border.replace('border-', 'ring-')}`
+                          : 'bg-white/[0.03] text-zinc-400 border-white/10 hover:bg-white/[0.06] hover:text-white'
                       } ${isLoading ? 'opacity-60 cursor-wait' : ''}`}
                     >
                       {isLoading ? '...' : label}
@@ -102,13 +102,13 @@ export function AssetSelector({ onSelect }: Props) {
 
       {/* Avertissement Boom/Crash */}
       {currentSymbol && (currentSymbol.includes('BOOM') || currentSymbol.includes('CRASH')) && (
-        <div className="mt-4 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2">
-          <p className="text-orange-300 text-xs font-semibold">
+        <div className="mt-4 bg-orange-500/10 border border-orange-500/25 rounded-lg px-3 py-2">
+          <p className="text-orange-200 text-xs font-semibold">
             {currentSymbol.includes('BOOM')
-              ? '⚡ Boom Index : spikes haussiers imprévisibles. Stratégie BUY recommandée uniquement.'
-              : '⚡ Crash Index : spikes baissiers imprévisibles. Stratégie SELL recommandée uniquement.'}
+              ? 'Boom Index : spikes haussiers imprévisibles. Stratégie BUY recommandée uniquement.'
+              : 'Crash Index : spikes baissiers imprévisibles. Stratégie SELL recommandée uniquement.'}
           </p>
-          <p className="text-orange-400/70 text-xs mt-1">
+          <p className="text-orange-200/70 text-xs mt-1">
             Gain ou perte en quelques secondes. Ne jamais risquer plus de 1-2% du capital.
           </p>
         </div>

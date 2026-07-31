@@ -43,24 +43,22 @@ export function PriceCard() {
     : '--'
 
   return (
-    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
+    <div className="surface-solid p-6">
       {/* En-tête */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="text-white font-bold text-xl">
             {SYMBOL_LABELS[currentSymbol] ?? currentSymbol}
           </h2>
-          <p className="text-gray-400 text-sm mt-0.5">Indice synthétique</p>
+          <p className="text-zinc-400 text-sm mt-0.5">Indice synthétique</p>
         </div>
-        <span className="bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full border border-blue-500/30">
-          LIVE
-        </span>
+        <span className="chip chip-accent">Live</span>
       </div>
 
       {/* Prix + variation */}
       <div className="flex items-end gap-4 my-4">
         <div>
-          <p className="text-gray-400 text-sm mb-1">Prix actuel</p>
+          <p className="text-zinc-400 text-sm mb-1">Prix actuel</p>
           <p className="text-white text-5xl font-mono font-bold tracking-tight">
             {currentTick ? currentTick.price.toFixed(4) : '----.----'}
           </p>
@@ -78,20 +76,20 @@ export function PriceCard() {
       </div>
 
       {/* Stats bas */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
         <div>
-          <p className="text-gray-400 text-xs mb-1">Tendance</p>
+          <p className="text-zinc-400 text-xs mb-1">Tendance</p>
           <p className={`font-semibold ${tc.color}`}>
             {tc.icon} {trend?.label ?? 'Neutre'}
             {trend?.strength ? ` — ${trend.strength}%` : ''}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-gray-400 text-xs mb-1">Dernier tick</p>
-          <p className="text-gray-300 font-mono text-sm">{lastTimestamp}</p>
+          <p className="text-zinc-400 text-xs mb-1">Dernier tick</p>
+          <p className="text-zinc-300 font-mono text-sm">{lastTimestamp}</p>
         </div>
         <div className="text-right">
-          <p className="text-gray-400 text-xs mb-1">Ticks reçus</p>
+          <p className="text-zinc-400 text-xs mb-1">Ticks reçus</p>
           <p className="text-white font-bold text-lg">{ticks.length}</p>
         </div>
       </div>

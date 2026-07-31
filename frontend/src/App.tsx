@@ -47,24 +47,20 @@ export default function App() {
   const btnBorder =
     sigType === 'BUY'  ? 'border-green-500/40' :
     sigType === 'SELL' ? 'border-red-500/40'   :
-    'border-gray-700'
+    'border-white/10'
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="app-bg">
 
       {/* ── Header ── */}
-      <header className="bg-gray-800 border-b border-gray-700 px-4 py-3 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/70 backdrop-blur">
+        <div className="app-container py-3 flex items-center justify-between gap-3 flex-wrap">
           {/* Logo + titre */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
-              D
-            </div>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400/90 to-blue-500/90 shadow-[0_10px_30px_rgba(34,211,238,0.18)] flex items-center justify-center font-black text-[11px] tracking-wide text-zinc-950 shrink-0">DA</div>
             <div>
-              <h1 className="text-white font-bold text-sm leading-none">
-                Deriv AI Trading Assistant
-              </h1>
-              <p className="text-gray-500 text-xs">{currentSymbol} · 1min / 5min / 15min / 1h</p>
+              <h1 className="text-white font-bold text-sm leading-none">Deriv AI Trading Assistant</h1>
+              <p className="text-zinc-400 text-xs">{currentSymbol} · 1min / 5min / 15min / 1h</p>
             </div>
           </div>
 
@@ -78,12 +74,12 @@ export default function App() {
 
       {/* ── Alerte invalidation ── */}
       {isInvalidated && (
-        <div className="bg-red-600 text-white text-center py-2 text-sm font-bold animate-pulse px-4 z-20">
-          🚨 SIGNAL INVALIDÉ — Conditions cassées. Ne pas entrer en position.
+        <div className="border-b border-red-500/30 bg-red-500/10 text-red-200 text-center py-2 text-sm font-bold px-4 z-20">
+          Signal invalidé — conditions cassées. Ne pas entrer en position.
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+      <main className="app-container py-5 space-y-4">
 
         {/* ① Bannière de décision — toujours en premier */}
         <DecisionBanner />
@@ -111,8 +107,8 @@ export default function App() {
           onClick={() => setShowDetails(v => !v)}
           className={`w-full py-2.5 rounded-xl border text-sm font-semibold transition-all ${
             showDetails
-              ? 'bg-gray-700 border-gray-600 text-white'
-              : `bg-gray-800 ${btnBorder} text-gray-300 hover:text-white`
+              ? 'bg-white/[0.06] border-white/10 text-white'
+              : `bg-white/[0.04] ${btnBorder} text-zinc-300 hover:text-white hover:bg-white/[0.06]`
           }`}
         >
           {showDetails
@@ -153,7 +149,7 @@ export default function App() {
 
       </main>
 
-      <footer className="text-center py-3 text-gray-700 text-xs border-t border-gray-800 mt-4">
+      <footer className="text-center py-4 text-zinc-500 text-xs border-t border-white/10 mt-6">
         Deriv AI Trading Assistant · Indicatif uniquement · Pas un conseil financier
       </footer>
     </div>

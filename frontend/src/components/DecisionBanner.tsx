@@ -36,7 +36,7 @@ function LimitOrderCard({
       {/* Titre */}
       <div className="flex items-center justify-between mb-2">
         <p className={`text-sm font-bold ${isConfirmed ? color : 'text-gray-300'}`}>
-          {isConfirmed ? `✅ ${orderType} confirmé` : `📍 ${orderType} suggéré`}
+          {isConfirmed ? `${orderType} confirmé` : `${orderType} suggéré`}
         </p>
         {pa.score > 0 && (
           <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
@@ -76,7 +76,7 @@ function LimitOrderCard({
           pa.pattern.strength === 'strong' ? (isBuy ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300')
           : 'bg-gray-700 text-gray-300'
         }`}>
-          {pa.pattern.strength === 'strong' ? '⚡' : '◆'} {pa.pattern_label}
+          ◆ {pa.pattern_label}
         </div>
       )}
 
@@ -102,27 +102,27 @@ function PriceGrid({
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-      <div className="bg-gray-800/70 rounded-xl p-3">
-        <p className="text-gray-400 text-xs mb-0.5">Prix actuel</p>
+      <div className="rounded-xl p-3 border border-white/10 bg-white/[0.03]">
+        <p className="text-zinc-400 text-xs mb-0.5">Prix actuel</p>
         <p className="text-white font-mono font-bold text-lg">{price.toFixed(4)}</p>
       </div>
-      <div className="bg-gray-800/70 rounded-xl p-3">
-        <p className="text-gray-400 text-xs mb-0.5">Mise suggérée</p>
+      <div className="rounded-xl p-3 border border-white/10 bg-white/[0.03]">
+        <p className="text-zinc-400 text-xs mb-0.5">Mise suggérée</p>
         <p className="text-white font-mono font-bold text-lg">
           {stake?.enter_now ? `${stake.amount.toFixed(2)}$` : '—'}
         </p>
         {(stake?.pct_of_capital ?? 0) > 0 && (
-          <p className="text-gray-500 text-xs">{stake.pct_of_capital}% de {baseAmount}$</p>
+          <p className="text-zinc-500 text-xs">{stake.pct_of_capital}% de {baseAmount}$</p>
         )}
       </div>
       {pos && (
         <>
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3">
+          <div className="bg-green-500/8 border border-green-500/20 rounded-xl p-3">
             <p className="text-green-400 text-xs mb-0.5">Take Profit</p>
             <p className="text-green-400 font-mono font-bold text-lg">{pos.take_profit.toFixed(4)}</p>
             <p className="text-green-500/60 text-xs">+{pos.tp_pips.toFixed(1)} pips</p>
           </div>
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+          <div className="bg-red-500/8 border border-red-500/20 rounded-xl p-3">
             <p className="text-red-400 text-xs mb-0.5">Stop Loss</p>
             <p className="text-red-400 font-mono font-bold text-lg">{pos.stop_loss.toFixed(4)}</p>
             <p className="text-red-500/60 text-xs">-{pos.sl_pips.toFixed(1)} pips</p>
@@ -145,8 +145,8 @@ function FVGInfo({ analysis, price, isBuy }: { analysis: any; price: number; isB
     <div className={`mt-3 rounded-xl p-3 border ${insideZone ? 'bg-purple-500/15 border-purple-500/40' : bgActive}`}>
       <p className={`text-xs font-bold mb-1.5 ${insideZone ? 'text-purple-400' : accentBuy}`}>
         {insideZone
-          ? '⚡ PRIX DANS LE FVG — Entrée optimale maintenant !'
-          : `📍 FVG ${isBuy ? 'haussier' : 'baissier'} de référence`}
+          ? 'PRIX DANS LE FVG — Entrée optimale maintenant'
+          : `FVG ${isBuy ? 'haussier' : 'baissier'} de référence`}
       </p>
       <div className="flex gap-4 flex-wrap text-xs">
         <span className="text-gray-400">
@@ -194,10 +194,10 @@ export function DecisionBanner() {
   // ── 1. WAIT — données insuffisantes ──
   if (!sig || sig.type === 'WAIT' || !price) {
     return (
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
+      <div className="surface-solid p-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center animate-pulse">
-            <span className="text-gray-400 text-xl">⏳</span>
+          <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-cyan-400/70 border-t-transparent rounded-full animate-spin" />
           </div>
           <div>
             <p className="text-gray-300 font-bold text-lg">Collecte des données...</p>
@@ -213,10 +213,10 @@ export function DecisionBanner() {
   // ── 2. MARCHÉ INSTABLE ──
   if (regime?.regime === 'unstable') {
     return (
-      <div className="bg-red-900/30 border-2 border-red-500/50 rounded-2xl p-5">
+      <div className="surface p-5 bg-red-500/5 ring-1 ring-red-500/25">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
-            <span className="text-3xl">⛔</span>
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0">
+            <span className="text-2xl font-black text-red-200">!</span>
           </div>
           <div className="flex-1">
             <p className="text-red-400 font-black text-2xl tracking-wide">NE RIEN FAIRE</p>
@@ -235,10 +235,10 @@ export function DecisionBanner() {
     const bestPending = pending.find((p: any) => p.estimated_confidence >= 70)
     const nearestFvg  = analysis?.nearest_fvg_entry
     return (
-      <div className="bg-yellow-900/20 border-2 border-yellow-500/40 rounded-2xl p-5">
+      <div className="surface p-5 bg-amber-500/5 ring-1 ring-amber-500/20">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center shrink-0">
-            <span className="text-3xl">⏳</span>
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 border-2 border-amber-300/70 border-t-transparent rounded-full animate-spin" />
           </div>
           <div className="flex-1">
             <p className="text-yellow-400 font-black text-2xl tracking-wide">NE RIEN FAIRE POUR L'INSTANT</p>
@@ -246,7 +246,7 @@ export function DecisionBanner() {
 
             {nearestFvg && (
               <div className="mt-3 bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
-                <p className="text-purple-400 text-xs font-bold mb-2">⭐ Attendez ce FVG pour entrer</p>
+                <p className="text-purple-300 text-xs font-bold mb-2">Attendez ce FVG pour entrer</p>
                 <div className="flex items-center gap-4 flex-wrap text-sm">
                   <span className="text-gray-400 text-xs">
                     Direction :{' '}
@@ -270,7 +270,7 @@ export function DecisionBanner() {
             {bestPending && !nearestFvg && (
               <div className="mt-3 bg-gray-800/60 border border-yellow-500/20 rounded-xl p-3">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-1">
-                  📍 Prix cible à surveiller
+                  Prix cible à surveiller
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className={`text-xl font-mono font-bold ${bestPending.direction === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
@@ -284,7 +284,7 @@ export function DecisionBanner() {
                   </span>
                 </div>
                 {bestPending.proximity_alert && (
-                  <p className="text-yellow-400 text-xs font-bold mt-1 animate-pulse">🔔 Le prix s'approche !</p>
+                  <p className="text-amber-300 text-xs font-bold mt-1 animate-pulse">Le prix s'approche</p>
                 )}
               </div>
             )}
@@ -299,10 +299,10 @@ export function DecisionBanner() {
     // 4. BUY EN FORMATION
     if (!confirmationOk) {
       return (
-        <div className="bg-blue-900/20 border-2 border-blue-500/40 rounded-2xl p-5">
+        <div className="surface p-5 bg-cyan-500/5 ring-1 ring-cyan-500/20">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0 animate-pulse">
-              <span className="text-3xl">🔄</span>
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 border-2 border-cyan-300/70 border-t-transparent rounded-full animate-spin" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap mb-1">
@@ -319,7 +319,7 @@ export function DecisionBanner() {
               {!pa?.limit_price && (
                 <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3">
                   <p className="text-blue-300 text-sm font-semibold">
-                    ⏳ Attendre un pattern de confirmation sur M5 (Engulfing, Pinbar, Marubozu).
+                    Attendre un pattern de confirmation sur M5 (Engulfing, Pinbar, Marubozu).
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
                     La bannière passera au vert dès qu'un pattern fort est détecté sur un niveau clé.
@@ -344,9 +344,9 @@ export function DecisionBanner() {
 
     // 5. BUY CONFIRMÉ
     return (
-      <div className="bg-green-900/25 border-2 border-green-500/60 rounded-2xl p-5 shadow-lg shadow-green-900/20">
+      <div className="surface p-5 bg-emerald-500/5 ring-1 ring-emerald-500/25 shadow-[0_18px_50px_rgba(16,185,129,0.08)]">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-green-500/25 border border-green-500/50 flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
             <span className="text-3xl">▲</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -357,7 +357,7 @@ export function DecisionBanner() {
               </span>
               {stability?.locked && stability?.remaining_label && (
                 <span className="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
-                  🔒 Signal stable {stability.remaining_label}
+                  Signal stable {stability.remaining_label}
                 </span>
               )}
             </div>
@@ -384,10 +384,10 @@ export function DecisionBanner() {
   // 4. SELL EN FORMATION
   if (!confirmationOk) {
     return (
-      <div className="bg-orange-900/20 border-2 border-orange-500/40 rounded-2xl p-5">
+      <div className="surface p-5 bg-orange-500/5 ring-1 ring-orange-500/20">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center shrink-0 animate-pulse">
-            <span className="text-3xl">🔄</span>
+          <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 border-2 border-orange-300/70 border-t-transparent rounded-full animate-spin" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
@@ -404,7 +404,7 @@ export function DecisionBanner() {
             {!pa?.limit_price && (
               <div className="mt-3 bg-orange-500/10 border border-orange-500/20 rounded-xl px-4 py-3">
                 <p className="text-orange-300 text-sm font-semibold">
-                  ⏳ Attendre un pattern de confirmation sur M5 (Engulfing, Pinbar, Marubozu).
+                  Attendre un pattern de confirmation sur M5 (Engulfing, Pinbar, Marubozu).
                 </p>
                 <p className="text-gray-400 text-xs mt-1">
                   La bannière passera au rouge dès qu'un pattern fort est détecté sur un niveau clé.
@@ -429,9 +429,9 @@ export function DecisionBanner() {
 
   // 5. SELL CONFIRMÉ
   return (
-    <div className="bg-red-900/25 border-2 border-red-500/60 rounded-2xl p-5 shadow-lg shadow-red-900/20">
+    <div className="surface p-5 bg-red-500/5 ring-1 ring-red-500/25 shadow-[0_18px_50px_rgba(239,68,68,0.08)]">
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-red-500/25 border border-red-500/50 flex items-center justify-center shrink-0">
+        <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/25 flex items-center justify-center shrink-0">
           <span className="text-3xl">▼</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -442,7 +442,7 @@ export function DecisionBanner() {
             </span>
             {stability?.locked && stability?.remaining_label && (
               <span className="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
-                🔒 Signal stable {stability.remaining_label}
+                Signal stable {stability.remaining_label}
               </span>
             )}
           </div>

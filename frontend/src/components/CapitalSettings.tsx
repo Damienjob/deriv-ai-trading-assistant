@@ -29,19 +29,19 @@ export function CapitalSettings() {
   }
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 px-5 py-4 flex items-center gap-4 flex-wrap">
+    <div className="surface-solid px-5 py-4 flex items-center gap-4 flex-wrap">
       <div>
-        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-1">
+        <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide mb-1">
           Capital de base
         </p>
-        <p className="text-gray-500 text-xs">
+        <p className="text-zinc-500 text-xs">
           Utilisé pour calculer la mise recommandée
         </p>
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold">$</span>
           <input
             type="number"
             min="1"
@@ -49,17 +49,17 @@ export function CapitalSettings() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            className="bg-gray-700 border border-gray-600 text-white rounded-lg pl-7 pr-3 py-2 w-32
-                       text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="bg-white/[0.03] border border-white/10 text-white rounded-lg pl-7 pr-3 py-2 w-32
+                       text-sm font-mono focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25"
             aria-label="Montant du capital"
           />
         </div>
         <button
           onClick={handleSave}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          className={`btn px-4 py-2 ${
             saved
-              ? 'bg-green-600 text-white'
-              : 'bg-blue-600 hover:bg-blue-500 text-white'
+              ? 'border-emerald-500/25 bg-emerald-500/15 text-emerald-200'
+              : 'btn-strong'
           }`}
         >
           {saved ? '✓ Enregistré' : 'Appliquer'}
@@ -73,8 +73,8 @@ export function CapitalSettings() {
           { label: 'Risque moyen (2%)',   pct: 2 },
           { label: 'Risque élevé (3%)',   pct: 3 },
         ].map(({ label, pct }) => (
-          <div key={pct} className="bg-gray-700/50 rounded-lg px-3 py-2 text-center">
-            <p className="text-gray-400 text-xs">{label}</p>
+          <div key={pct} className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-center">
+            <p className="text-zinc-400 text-xs">{label}</p>
             <p className="text-white font-mono font-bold text-sm mt-0.5">
               {(baseAmount * pct / 100).toFixed(2)}$
             </p>

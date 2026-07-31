@@ -29,27 +29,25 @@ export function AppLoader() {
   const currentStep = STEPS.find(s => !s.check(state))
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-6">
+    <div className="app-bg flex flex-col items-center justify-center px-6">
 
       {/* Logo */}
-      <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-2xl mb-6 shadow-lg shadow-blue-600/30">
-        D
-      </div>
+      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400/90 to-blue-500/90 flex items-center justify-center font-black text-base text-zinc-950 mb-6 shadow-[0_18px_55px_rgba(34,211,238,0.18)]">DA</div>
 
       <h1 className="text-xl font-bold text-white mb-1">Deriv AI Trading Assistant</h1>
-      <p className="text-gray-400 text-sm mb-10">
+      <p className="text-zinc-400 text-sm mb-10">
         {currentStep ? currentStep.label + dots : 'Prêt' + dots}
       </p>
 
       {/* Barre de progression */}
       <div className="w-full max-w-sm mb-8">
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
+        <div className="flex justify-between text-xs text-zinc-500 mb-2">
           <span>Chargement</span>
           <span>{progress}%</span>
         </div>
-        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+            className="h-full bg-cyan-400/80 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -65,11 +63,11 @@ export function AppLoader() {
               {/* Icône */}
               <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-xs transition-all duration-300 ${
                 done   ? 'bg-green-500 text-white' :
-                active ? 'bg-blue-500/20 border border-blue-500 text-blue-400' :
-                         'bg-gray-800 border border-gray-700 text-gray-600'
+                active ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300' :
+                         'bg-white/[0.03] border border-white/10 text-zinc-500'
               }`}>
                 {done ? '✓' : active ? (
-                  <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-300 animate-pulse" />
                 ) : ''}
               </div>
 
@@ -77,15 +75,15 @@ export function AppLoader() {
               <span className={`text-sm transition-colors duration-300 ${
                 done   ? 'text-green-400' :
                 active ? 'text-white font-medium' :
-                         'text-gray-600'
+                         'text-zinc-500'
               }`}>
                 {step.label}
                 {active && i === 2 && (
-                  <span className="text-blue-400 text-xs ml-1">
+                  <span className="text-cyan-300 text-xs ml-1">
                     {state.ticks.length === 0 ? '(en attente...)' : '(✓)'}
                   </span>
                 )}
-                {active && i !== 2 && <span className="text-blue-400">{dots}</span>}
+                {active && i !== 2 && <span className="text-cyan-300">{dots}</span>}
               </span>
             </div>
           )
@@ -93,7 +91,7 @@ export function AppLoader() {
       </div>
 
       {/* Info symbole */}
-      <p className="mt-10 text-xs text-gray-600">
+      <p className="mt-10 text-xs text-zinc-500">
         {state.currentSymbol} · Volatility Index
       </p>
     </div>

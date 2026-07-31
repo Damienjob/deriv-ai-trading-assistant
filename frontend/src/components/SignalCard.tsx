@@ -7,17 +7,17 @@
 import { useMarketStore } from '../store/marketStore'
 
 const SIGNAL_CONFIG = {
-  BUY:     { color: 'text-green-400', bg: 'bg-green-500/10',  border: 'border-green-500/30',  icon: '▲' },
-  SELL:    { color: 'text-red-400',   bg: 'bg-red-500/10',    border: 'border-red-500/30',    icon: '▼' },
-  NEUTRAL: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', icon: '◆' },
-  WAIT:    { color: 'text-gray-400',  bg: 'bg-gray-700/40',   border: 'border-gray-600',      icon: '◌' },
+  BUY:     { color: 'text-emerald-300', tint: 'bg-emerald-500/5', ring: 'ring-1 ring-emerald-500/25', chip: 'chip-success', icon: '▲' },
+  SELL:    { color: 'text-red-300',     tint: 'bg-red-500/5',     ring: 'ring-1 ring-red-500/25',     chip: 'chip-danger',  icon: '▼' },
+  NEUTRAL: { color: 'text-amber-300',   tint: 'bg-amber-500/5',   ring: 'ring-1 ring-amber-500/20',   chip: '',             icon: '◆' },
+  WAIT:    { color: 'text-zinc-300',    tint: '',                ring: '',                           chip: '',             icon: '◌' },
 }
 
 function CountdownBar({ remaining, total }: { remaining: number; total: number }) {
   const pct = total > 0 ? Math.max(0, (remaining / total) * 100) : 0
   const color = pct > 60 ? 'bg-green-500' : pct > 30 ? 'bg-yellow-500' : 'bg-red-500'
   return (
-    <div className="w-full bg-gray-700 rounded-full h-1.5">
+    <div className="w-full bg-white/10 rounded-full h-1.5">
       <div
         className={`h-1.5 rounded-full transition-all duration-1000 ${color}`}
         style={{ width: `${pct}%` }}
@@ -52,25 +52,21 @@ export function SignalCard() {
   // Le compteur tick_count est obsolète depuis l'ajout de fetch_tick_history
 
   return (
-    <div className={`rounded-2xl border p-5 flex flex-col gap-3 ${cfg.bg} ${cfg.border}`}>
+    <div className={`surface p-5 flex flex-col gap-3 ${cfg.tint} ${cfg.ring}`}>
 
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-gray-300 font-semibold text-sm">Signal MTF</h3>
+          <h3 className="text-zinc-200 font-semibold text-sm">Signal MTF</h3>
           {/* Indicateur de stabilité */}
           {isLocked && sigType !== 'WAIT' && sigType !== 'NEUTRAL' ? (
-            <span className="text-xs bg-gray-900/60 border border-gray-600 text-gray-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-              🔒 Stable
-            </span>
+            <span className="chip chip-success">Stable</span>
           ) : (
-            <span className="text-xs bg-gray-900/60 border border-gray-600 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
-              🔄 Analyse
-            </span>
+            <span className="chip chip-accent animate-pulse">Analyse</span>
           )}
         </div>
         {signal && signal.confidence > 0 && (
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-gray-900/60 ${cfg.color}`}>
+          <span className={`chip ${cfg.chip} ${cfg.color}`}>
             {signal.confidence}%
           </span>
         )}
@@ -91,12 +87,12 @@ export function SignalCard() {
       {/* Compte à rebours de validité */}
       {isLocked && remaining > 0 && (
         <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-400">
+          <div className="flex justify-between text-xs text-zinc-400">
             <span>Signal valide encore</span>
             <span className="font-mono font-semibold text-white">{remainingLabel}</span>
           </div>
           <CountdownBar remaining={remaining} total={LOCK_TOTAL} />
-          <p className="text-gray-600 text-xs">
+          <p className="text-zinc-500 text-xs">
             Recalcul à la prochaine clôture de bougie M5
           </p>
         </div>
@@ -104,9 +100,9 @@ export function SignalCard() {
 
       {/* Explication stabilité */}
       {!isLocked && sigType !== 'WAIT' && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-          <p className="text-blue-300 text-xs">
-            🔄 Nouveau signal calculé à la clôture de la bougie M5.
+        <div className="rounded-lg px-3 py-2 border border-cyan-500/20 bg-cyan-500/10">
+          <p className="text-cyan-200 text-xs">
+            Nouveau signal calculé à la clôture de la bougie M5.
             Il sera stable pendant 3 à 5 minutes.
           </p>
         </div>
@@ -125,8 +121,8 @@ export function SignalCard() {
 
       {/* Mise recommandée */}
       {stake && (
-        <div className="rounded-lg bg-gray-800/80 border border-gray-700 px-3 py-2.5">
-          <p className="text-gray-400 text-xs mb-1 font-semibold uppercase tracking-wide">
+        <div className="rounded-lg bg-white/[0.03] border border-white/10 px-3 py-2.5">
+          <p className="text-zinc-400 text-xs mb-1 font-semibold uppercase tracking-wide">
             Gestion du risque
           </p>
           {stake.enter_now ? (
@@ -134,22 +130,22 @@ export function SignalCard() {
               <span className="text-white font-mono font-bold text-lg">
                 {stake.amount.toFixed(2)}$
               </span>
-              <span className="text-gray-400 text-xs">
+              <span className="text-zinc-400 text-xs">
                 {stake.pct_of_capital}% de {baseAmount}$
               </span>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm">Mise : 0$ (ne pas entrer)</p>
+            <p className="text-zinc-400 text-sm">Mise : 0$ (ne pas entrer)</p>
           )}
-          <p className="text-gray-500 text-xs mt-1">{stake.reason}</p>
+          <p className="text-zinc-500 text-xs mt-1">{stake.reason}</p>
         </div>
       )}
 
       {/* Explication pourquoi */}
       {signal?.why && (
-        <div className="rounded-lg bg-gray-900/60 border border-gray-700/50 px-3 py-2">
-          <p className="text-gray-400 text-xs font-semibold mb-1">Pourquoi ?</p>
-          <p className="text-gray-300 text-xs leading-relaxed">{signal.why}</p>
+        <div className="rounded-lg bg-black/20 border border-white/10 px-3 py-2">
+          <p className="text-zinc-400 text-xs font-semibold mb-1">Pourquoi ?</p>
+          <p className="text-zinc-200 text-xs leading-relaxed">{signal.why}</p>
         </div>
       )}
 
@@ -157,7 +153,7 @@ export function SignalCard() {
       {signal?.reasons && signal.reasons.length > 0 && (
         <ul className="space-y-1">
           {signal.reasons.map((r, i) => (
-            <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+            <li key={i} className="text-xs text-zinc-400 flex gap-1.5">
               <span className={`shrink-0 ${cfg.color}`}>›</span>
               <span>{r}</span>
             </li>
@@ -165,8 +161,8 @@ export function SignalCard() {
         </ul>
       )}
 
-      <p className="text-gray-600 text-xs mt-auto pt-2 border-t border-gray-700/40">
-        ⚠ Signal stable sur bougie M5 · Pas un conseil financier
+      <p className="text-zinc-500 text-xs mt-auto pt-2 border-t border-white/10">
+        Signal stable sur bougie M5 · Pas un conseil financier
       </p>
     </div>
   )

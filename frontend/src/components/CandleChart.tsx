@@ -89,21 +89,21 @@ export function CandleChart() {
       width:  containerRef.current.clientWidth,
       height: 400,
       layout: {
-        background: { type: ColorType.Solid, color: '#111827' },
-        textColor: '#9ca3af',
+        background: { type: ColorType.Solid, color: '#070a11' },
+        textColor: '#a1a1aa',
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#1f2937' },
-        horzLines: { color: '#1f2937' },
+        vertLines: { color: '#111827' },
+        horzLines: { color: '#111827' },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: {
-        borderColor: '#374151',
+        borderColor: '#1f2937',
         scaleMargins: { top: 0.08, bottom: 0.08 },
       },
       timeScale: {
-        borderColor: '#374151',
+        borderColor: '#1f2937',
         timeVisible: true,
         secondsVisible: activeTimeframe === '1min',
         rightOffset: 8,
@@ -328,30 +328,30 @@ export function CandleChart() {
   const fvgCount    = analysis?.fvgs?.length ?? 0
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden">
+    <div className="surface-solid overflow-hidden">
 
       {/* ── En-tête ── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-wrap gap-2">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <h3 className="text-white font-semibold text-sm">Bougies japonaises</h3>
           {candleCount > 0 && (
-            <span className="text-gray-500 text-xs">{candleCount} bougies</span>
+            <span className="text-zinc-400 text-xs">{candleCount} bougies</span>
           )}
           {fvgCount > 0 && (
-            <span className="bg-purple-500/20 text-purple-400 text-xs px-2 py-0.5 rounded-full border border-purple-500/30">
+            <span className="chip" style={{ borderColor: 'rgba(168,85,247,0.35)', backgroundColor: 'rgba(168,85,247,0.10)', color: 'rgb(216,180,254)' }}>
               {fvgCount} FVG
             </span>
           )}
         </div>
 
         {/* Sélecteur TF */}
-        <div className="flex gap-0.5 bg-gray-800 rounded-lg p-0.5">
+        <div className="flex gap-0.5 rounded-xl p-1 border border-white/10 bg-white/[0.03]">
           {TIMEFRAMES.map(tf => (
             <button key={tf} onClick={() => setActiveTimeframe(tf)}
               className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
                 activeTimeframe === tf
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-cyan-500/20 text-cyan-100'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               {TF_LABEL[tf]}
@@ -361,7 +361,7 @@ export function CandleChart() {
       </div>
 
       {/* ── Contrôles d'overlay ── */}
-      <div className="flex gap-3 px-4 py-2 border-b border-gray-700/50 bg-gray-800/40 flex-wrap">
+      <div className="flex gap-3 px-4 py-2 border-b border-white/10 bg-black/10 flex-wrap">
         {[
           { key: 'ema',  label: 'EMA 20/50',   color: 'bg-blue-500',   state: showEMA, set: setShowEMA  },
           { key: 'bb',   label: 'Bollinger',    color: 'bg-red-500',    state: showBB,  set: setShowBB   },
@@ -371,17 +371,17 @@ export function CandleChart() {
           <button key={key} onClick={() => set(!state)}
             className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-all ${
               state
-                ? 'border-gray-600 text-white bg-gray-700'
-                : 'border-gray-700 text-gray-500 bg-transparent'
+                ? 'border-white/15 text-white bg-white/[0.06]'
+                : 'border-white/10 text-zinc-400 bg-transparent hover:bg-white/[0.04]'
             }`}
           >
-            <span className={`w-2 h-2 rounded-full ${state ? color : 'bg-gray-600'}`} />
+            <span className={`w-2 h-2 rounded-full ${state ? color : 'bg-white/20'}`} />
             {label}
           </button>
         ))}
 
         {/* Légende inline */}
-        <div className="ml-auto flex gap-3 items-center text-xs text-gray-500">
+        <div className="ml-auto flex gap-3 items-center text-xs text-zinc-500">
           <span>▲ <span className="text-green-400">BUY</span></span>
           <span>▼ <span className="text-red-400">SELL</span></span>
           <span>⬩ <span className="text-purple-400">FVG</span></span>
@@ -390,11 +390,11 @@ export function CandleChart() {
 
       {/* ── Zone graphique ── */}
       {candleCount === 0 ? (
-        <div className="flex items-center justify-center flex-col gap-3 text-gray-500 bg-gray-900"
+        <div className="flex items-center justify-center flex-col gap-3 text-zinc-400"
           style={{ height: 400 }}>
-          <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-7 h-7 border-2 border-cyan-400/70 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm">Chargement des bougies {TF_LABEL[activeTimeframe]}...</p>
-          <p className="text-xs text-gray-600">Les bougies arrivent depuis Deriv au démarrage</p>
+          <p className="text-xs text-zinc-500">Les bougies arrivent depuis Deriv au démarrage</p>
         </div>
       ) : (
         <div ref={containerRef} className="w-full" style={{ height: 400 }}

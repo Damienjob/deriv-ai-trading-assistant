@@ -1,28 +1,133 @@
-import { IconBarChart, IconBolt, IconHome, IconInfo, IconX } from './Icon'
+import { IconBarChart, IconBolt, IconInfo, IconX } from './Icon'
 
 export type AppView = 'home' | 'dashboard' | 'analysis' | 'positions'
 
 const NAV: Array<{ key: AppView; label: string; Icon: (props: any) => any; badge?: string }> = [
-  { key: 'home',      label: 'Accueil',   Icon: IconHome },
   { key: 'dashboard', label: 'Dashboard', Icon: IconBolt,     badge: 'Live' },
   { key: 'analysis',  label: 'Analyse',   Icon: IconInfo },
   { key: 'positions', label: 'Positions', Icon: IconBarChart },
 ]
 
-export function Sidebar({
+function SidebarContent({
   active,
   onNavigate,
-  isOpen,
   onClose,
 }: {
   active: AppView
   onNavigate: (view: AppView) => void
-  isOpen: boolean
-  onClose: () => void
+  onClose?: () => void
+}) {
+  return (
+    <div className="flex flex-col h-full">
+
+      {/* ── Logo ── */}
+      <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[11px] tracking-widest shrink-0"
+            style={{ background: 'linear-gradient(135deg,#4edea3,#059669)', color: '#003824', boxShadow: '0 0 16px rgba(78,222,163,0.25)' }}>
+            <IconBarChart size={16} />
+          </div>
+          <div className="leading-tight">
+            <p className="text-white font-bold text-sm leading-none">Deriv AI</p>
+            <p className="text-zinc-500 text-[11px] mt-0.5 leading-none">Trading Assistant</p>
+          </div>
+        </div>
+        {onClose && (
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
+            aria-label="Fermer">
+            <IconX size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* ── Nav ── */}
+      <div className="px-3 pt-5 pb-2">
+        <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-zinc-600 px-2 mb-3">
+          Navigation
+        </p>
+        <nav className="space-y-1">
+          {NAV.map((item) => {
+            const isActive = item.key === active
+            return (
+              <button
+                key={item.key}
+                onClick={() => { onNavigate(item.key); onClose?.() }}
+                className={`
+                  relative group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+                  text-sm font-medium transition-all duration-150
+                  ${isActive
+                    ? 'text-emerald-300'
+                    : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
+                  }
+                `}
+                style={isActive ? {
+                  background: 'rgba(78,222,163,0.12)',
+                  border: '1px solid rgba(78,222,163,0.2)',
+                } : { border: '1px solid transparent' }}
+              >
+                <span className={`shrink-0 transition-colors ${isActive ? 'text-emerald-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                  <item.Icon size={16} />
+                </span>
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.badge && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none border
+                    ${isActive
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-white/[0.05] text-zinc-600 border-white/[0.06]'
+                    }`}>
+                    {item.badge}
+                  </span>
+                )}
+                {/* Barre droite active */}
+                {isActive && (
+                  <span className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-emerald-400" />
+                )}
+              </button>
+            )
+          })}
+        </nav>
+      </div>
+
+      {/* ── Spacer ── */}
+      <div className="flex-1" />
+
+      {/* ── Power Mode card ── */}
+      <div className="mx-3 mb-4 p-4 rounded-2xl"
+        style={{ background: 'rgba(78,222,163,0.08)', border: '1px solid rgba(78,222,163,0.2)' }}>
+        <p className="font-bold text-[13px] mb-1 text-emerald-300" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+          Power Mode
+        </p>
+        <p className="text-xs text-zinc-400 mb-3 leading-relaxed">
+          Accédez à des analyses de marché avancées et des signaux temps réel.
+        </p>
+        <button
+          className="w-full py-2.5 rounded-xl font-bold text-sm transition-all"
+          style={{ background: '#4edea3', color: '#003824', border: 'none', cursor: 'pointer', boxShadow: '0 0 12px rgba(78,222,163,0.25)' }}
+          onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 22px rgba(78,222,163,0.45)' }}
+          onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 12px rgba(78,222,163,0.25)' }}
+        >
+          Upgrade to Pro
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
+export function Sidebar({
+  active, onNavigate, isOpen, onClose,
+}: {
+  active: AppView; onNavigate: (view: AppView) => void; isOpen: boolean; onClose: () => void
 }) {
   return (
     <>
-      {/* Overlay */}
+      {/* Desktop permanent */}
+      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-60 z-40 bg-[#0d1120] border-r border-white/[0.06]">
+        <SidebarContent active={active} onNavigate={onNavigate} />
+      </aside>
+
+      {/* Overlay mobile */}
       <div
         className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -30,89 +135,14 @@ export function Sidebar({
         onClick={onClose}
       />
 
-      {/* Drawer */}
+      {/* Drawer mobile */}
       <aside
-        className={`fixed z-50 inset-y-0 left-0 w-72 flex flex-col
-          bg-[#0d1526] border-r border-white/[0.06]
+        className={`fixed z-50 inset-y-0 left-0 w-64 bg-[#0d1120] border-r border-white/[0.06]
           transform transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Header du sidebar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            {/* Logo */}
-            <div className="relative shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-[11px] tracking-widest text-zinc-950 shadow-[0_0_20px_rgba(34,211,238,0.25)]">
-                DA
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0d1526]" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">Deriv AI</p>
-              <p className="text-zinc-500 text-[11px] mt-0.5 leading-none">Trading Assistant</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
-            aria-label="Fermer le menu"
-          >
-            <IconX size={16} />
-          </button>
-        </div>
-
-        {/* Section label */}
-        <div className="px-5 pt-5 pb-2">
-          <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-zinc-600">Navigation</p>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {NAV.map((item) => {
-            const isActive = item.key === active
-            return (
-              <button
-                key={item.key}
-                onClick={() => { onNavigate(item.key); onClose() }}
-                className={`
-                  group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-                  text-sm font-medium transition-all duration-150
-                  ${isActive
-                    ? 'bg-white/[0.08] text-white'
-                    : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
-                  }
-                `}
-              >
-                {/* Active indicator */}
-                <span className={`shrink-0 transition-colors ${isActive ? 'text-cyan-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
-                  <item.Icon size={16} />
-                </span>
-                <span className="flex-1 text-left">{item.label}</span>
-                {item.badge && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full
-                    ${isActive
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                      : 'bg-white/[0.06] text-zinc-500 border border-white/[0.06]'
-                    }`}>
-                    {item.badge}
-                  </span>
-                )}
-                {isActive && (
-                  <span className="shrink-0 w-1 h-1 rounded-full bg-cyan-400" />
-                )}
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-white/[0.06]">
-          <p className="text-[11px] text-zinc-600 leading-relaxed">
-            Indicatif uniquement.<br />
-            Pas un conseil financier.
-          </p>
-        </div>
+        <SidebarContent active={active} onNavigate={onNavigate} onClose={onClose} />
       </aside>
     </>
   )

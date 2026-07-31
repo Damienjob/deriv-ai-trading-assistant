@@ -124,6 +124,66 @@ async def get_last_tick():
     return tick_store.to_dict(tick)
 
 
+@router.get("/prices")
+async def get_all_prices():
+    """
+    Retourne les derniers prix de tous les actifs supportés via l'API Deriv REST.
+    Utilisé pour le ticker de la page d'accueil.
+    """
+    import asyncio
+    import json
+    import websockets
+    from app.config import settings
+    from app.assets import ASSETS
+
+    symbols = list(ASSETS.keys())
+    results = {}
+
+    try:
+        url = f"{settings.deriv_ws_url}?app_id={settings.deriv_app_id}"
+        async with websockets.connect(url, ping_interval=None, open_timeout=8) as ws:
+            # Envoyer toutes les requêtes en parallèle
+            for sym in symbols:
+                await ws.send(json.dumps({
+                    "ticks_history": sym,
+                    "count": 2,
+                    "end": "latest",
+                    "style": "ticks",
+                    "req_id": hash(sym) & 0xFFFF,
+                }))
+
+            # Collecter les réponses avec un timeout
+            deadline = asyncio.get_event_loop().time() + 6.0
+            while len(results) < len(symbols):
+                remaining = deadline - asyncio.get_event_loop().time()
+                if remaining <= 0:
+                    break
+                try:
+                    raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
+                    msg = json.loads(raw)
+                    if msg.get("msg_type") == "history":
+                        sym = msg.get("echo_req", {}).get("ticks_history")
+                        prices = msg.get("history", {}).get("prices", [])
+                        times  = msg.get("history", {}).get("times", [])
+                        if sym and len(prices) >= 1:
+                            price = float(prices[-1])
+                            prev  = float(prices[-2]) if len(prices) >= 2 else price
+                            pct   = ((price - prev) / prev * 100) if prev else 0
+                            results[sym] = {
+                                "symbol": sym,
+                                "label":  ASSETS[sym].label if sym in ASSETS else sym,
+                                "price":  price,
+                                "change_pct": round(pct, 3),
+                            }
+                except asyncio.TimeoutError:
+                    break
+    except Exception as e:
+        logger.warning(f"Erreur fetch prices : {e}")
+
+    return {"prices": results}
+
+
+
 @router.get("/ticks")
 async def get_ticks(limit: int = 50):
     """Retourne les derniers N ticks."""

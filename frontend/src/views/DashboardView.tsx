@@ -10,21 +10,30 @@ export function DashboardView() {
   const { setCurrentSymbol } = useMarketStore()
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+
+      {/* ── Bannière de décision ── */}
       <DecisionBanner />
 
+      {/* ── Prix + Signal ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <PriceCard />
+        </div>
+        <div className="lg:col-span-2">
+          <SignalCard />
+        </div>
+      </div>
+
+      {/* ── Graphique ── */}
+      <CandleChart />
+
+      {/* ── Config : actif + capital ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <AssetSelector onSelect={setCurrentSymbol} />
         <CapitalSettings />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3"><PriceCard /></div>
-        <div className="lg:col-span-2"><SignalCard /></div>
-      </div>
-
-      <CandleChart />
     </div>
   )
 }
-

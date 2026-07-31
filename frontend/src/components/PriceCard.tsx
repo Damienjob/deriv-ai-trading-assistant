@@ -1,22 +1,18 @@
-/**
- * Carte principale affichant le prix actuel, la tendance et les stats.
- */
-
 import type { ComponentType } from 'react'
 import { useMarketStore } from '../store/marketStore'
 import { IconArrowDown, IconArrowUp, IconArrowsLeftRight } from './Icon'
 
 const SYMBOL_LABELS: Record<string, string> = {
-  R_10:     'Volatility 10 Index',
-  R_25:     'Volatility 25 Index',
-  R_50:     'Volatility 50 Index',
-  R_75:     'Volatility 75 Index',
-  R_100:    'Volatility 100 Index',
-  '1HZ10V':  'Volatility 10 (1s) Index',
-  '1HZ25V':  'Volatility 25 (1s) Index',
-  '1HZ50V':  'Volatility 50 (1s) Index',
-  '1HZ75V':  'Volatility 75 (1s) Index',
-  '1HZ100V': 'Volatility 100 (1s) Index',
+  R_10:      'Volatility 10',
+  R_25:      'Volatility 25',
+  R_50:      'Volatility 50',
+  R_75:      'Volatility 75',
+  R_100:     'Volatility 100',
+  '1HZ10V':  'Volatility 10 (1s)',
+  '1HZ25V':  'Volatility 25 (1s)',
+  '1HZ50V':  'Volatility 50 (1s)',
+  '1HZ75V':  'Volatility 75 (1s)',
+  '1HZ100V': 'Volatility 100 (1s)',
 }
 
 export function PriceCard() {
@@ -24,19 +20,19 @@ export function PriceCard() {
 
   const tfM15 = analysis?.timeframes?.['15min'] ?? analysis?.timeframes?.['5min']
   const trend = tfM15?.trend
-  const trendConfig: Record<string, { color: string; Icon: ComponentType<any> }> = {
-    up:      { color: 'text-emerald-300', Icon: IconArrowUp },
-    down:    { color: 'text-red-300',     Icon: IconArrowDown },
-    neutral: { color: 'text-amber-300',   Icon: IconArrowsLeftRight },
+
+  const trendConfig: Record<string, { color: string; bg: string; border: string; Icon: ComponentType<any> }> = {
+    up:      { color: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', Icon: IconArrowUp },
+    down:    { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     Icon: IconArrowDown },
+    neutral: { color: 'text-amber-300',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   Icon: IconArrowsLeftRight },
   }
   const tc = trendConfig[trend?.direction ?? 'neutral']
 
-  // Variation depuis le premier tick de la session
   const variation = (() => {
     if (ticks.length < 2 || !currentTick) return null
     const first = ticks[0].price
-    const diff = currentTick.price - first
-    const pct = (diff / first) * 100
+    const diff  = currentTick.price - first
+    const pct   = (diff / first) * 100
     return { diff, pct }
   })()
 
@@ -44,60 +40,74 @@ export function PriceCard() {
     ? new Date(currentTick.timestamp * 1000).toLocaleTimeString('fr-FR')
     : '--'
 
+  const isUp = (variation?.diff ?? 0) >= 0
+
   return (
-    <div className="surface-solid p-6">
-      {/* En-tête */}
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h2 className="text-white font-bold text-xl">
-            {SYMBOL_LABELS[currentSymbol] ?? currentSymbol}
-          </h2>
-          <p className="text-zinc-400 text-sm mt-0.5">Indice synthétique</p>
+    <div className="surface-solid overflow-hidden h-full">
+
+      {/* ── Header bande colorée ── */}
+      <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="section-label mb-1">Indice synthétique</p>
+            <h2 className="text-white font-bold text-lg leading-tight truncate">
+              {SYMBOL_LABELS[currentSymbol] ?? currentSymbol}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${tc.bg} ${tc.border} ${tc.color}`}>
+              <tc.Icon size={11} />
+              {trend?.label ?? 'Neutre'}
+            </span>
+            <span className="chip chip-accent">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Live
+            </span>
+          </div>
         </div>
-        <span className="chip chip-accent">Live</span>
       </div>
 
-      {/* Prix + variation */}
-      <div className="flex items-end gap-4 my-4">
-        <div>
-          <p className="text-zinc-400 text-sm mb-1">Prix actuel</p>
-          <p className="text-white text-5xl font-mono font-bold tracking-tight">
+      {/* ── Prix principal ── */}
+      <div className="px-5 py-5">
+        <p className="section-label mb-3">Prix actuel</p>
+        <div className="flex items-end gap-4">
+          <p className={`font-mono font-black tracking-tight leading-none transition-colors ${
+            currentTick ? (isUp ? 'text-emerald-300' : 'text-red-400') : 'text-zinc-500'
+          }`} style={{ fontSize: 'clamp(2rem, 5vw, 3rem)' }}>
             {currentTick ? currentTick.price.toFixed(4) : '----.----'}
           </p>
+          {variation && (
+            <div className="mb-0.5">
+              <p className={`font-mono font-bold text-base leading-none ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                {isUp ? '+' : ''}{variation.diff.toFixed(4)}
+              </p>
+              <p className={`font-mono text-xs mt-1 leading-none ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
+                {isUp ? '+' : ''}{variation.pct.toFixed(3)}%
+              </p>
+            </div>
+          )}
         </div>
-        {variation && (
-          <div className="mb-1">
-            <p className={`font-mono font-semibold text-lg ${variation.diff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {variation.diff >= 0 ? '+' : ''}{variation.diff.toFixed(4)}
-            </p>
-            <p className={`font-mono text-sm ${variation.diff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {variation.diff >= 0 ? '+' : ''}{variation.pct.toFixed(3)}%
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Stats bas */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-        <div>
-          <p className="text-zinc-400 text-xs mb-1">Tendance</p>
-          <p className={`font-semibold ${tc.color}`}>
-            <span className="inline-flex items-center gap-1.5">
-              <tc.Icon size={16} />
-              <span>{trend?.label ?? 'Neutre'}</span>
-            </span>
-            {trend?.strength ? ` — ${trend.strength}%` : ''}
+      {/* ── Stats row ── */}
+      <div className="px-5 pb-5 grid grid-cols-3 gap-3">
+        <div className="stat-cell">
+          <p className="stat-label">Tendance</p>
+          <p className={`font-semibold text-sm leading-none mt-1 flex items-center gap-1 ${tc.color}`}>
+            <tc.Icon size={13} />
+            {trend?.strength ? `${trend.strength}%` : '—'}
           </p>
         </div>
-        <div className="text-center">
-          <p className="text-zinc-400 text-xs mb-1">Dernier tick</p>
-          <p className="text-zinc-300 font-mono text-sm">{lastTimestamp}</p>
+        <div className="stat-cell">
+          <p className="stat-label">Dernier tick</p>
+          <p className="stat-value text-sm mt-1">{lastTimestamp}</p>
         </div>
-        <div className="text-right">
-          <p className="text-zinc-400 text-xs mb-1">Ticks reçus</p>
-          <p className="text-white font-bold text-lg">{ticks.length}</p>
+        <div className="stat-cell">
+          <p className="stat-label">Ticks reçus</p>
+          <p className="stat-value mt-1">{ticks.length.toLocaleString()}</p>
         </div>
       </div>
+
     </div>
   )
 }

@@ -89,13 +89,13 @@ export function CandleChart() {
       width:  containerRef.current.clientWidth,
       height: 400,
       layout: {
-        background: { type: ColorType.Solid, color: '#070a11' },
-        textColor: '#a1a1aa',
+        background: { type: ColorType.Solid, color: '#0d1120' },
+        textColor: '#71717a',
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#111827' },
-        horzLines: { color: '#111827' },
+        vertLines: { color: '#ffffff08' },
+        horzLines: { color: '#ffffff08' },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: {

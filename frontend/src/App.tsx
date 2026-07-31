@@ -1,5 +1,5 @@
 /**
- * Dashboard — Deriv AI Trading Assistant
+ * Deriv AI Trading Assistant
  */
 import { useState } from 'react'
 import { useWebSocket } from './hooks/useWebSocket'
@@ -9,177 +9,157 @@ import { ConnectionStatus } from './components/ConnectionStatus'
 import { NotificationPermission } from './components/NotificationPermission'
 import { useNotifications } from './hooks/useNotifications'
 import { Sidebar, type AppView } from './components/Sidebar'
-import { IconBarChart, IconBolt, IconHome, IconInfo, IconMenu } from './components/Icon'
-
+import { IconMenu } from './components/Icon'
 import { HomeView } from './views/HomeView'
 import { DashboardView } from './views/DashboardView'
 import { AnalysisView } from './views/AnalysisView'
 import { PositionsView } from './views/PositionsView'
 
-const NAV: Array<{ key: AppView; label: string; Icon: (p: any) => any; badge?: string }> = [
-  { key: 'home',      label: 'Accueil',   Icon: IconHome },
-  { key: 'dashboard', label: 'Dashboard', Icon: IconBolt,     badge: 'Live' },
-  { key: 'analysis',  label: 'Analyse',   Icon: IconInfo },
-  { key: 'positions', label: 'Positions', Icon: IconBarChart },
-]
-
 export default function App() {
   useWebSocket()
   useNotifications()
-  const { isReady, currentSymbol, analysis, isConnected } = useMarketStore()
-  const [view, setView] = useState<AppView>('home')
+  const { isReady, currentSymbol, analysis } = useMarketStore()
+  const [view, setView]               = useState<AppView>('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!isReady) return <AppLoader />
 
+  const isHome       = view === 'home'
   const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false
 
   return (
-    <div className="app-bg min-h-screen flex flex-col">
-      <Sidebar
-        active={view}
-        onNavigate={setView}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <div className="app-bg min-h-screen">
 
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur-xl">
-        <div className="app-container h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+      {/* Sidebar : uniquement sur les vues internes */}
+      {!isHome && (
+        <Sidebar
+          active={view}
+          onNavigate={setView}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
 
-          {/* ── COL 1 LEFT: burger + logo ── */}
-          <div className="flex items-center gap-3">
-            {/* Burger mobile */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] transition-colors"
-              aria-label="Ouvrir le menu"
-            >
-              <IconMenu size={17} />
-            </button>
+      {/* Zone principale — décalée du sidebar seulement hors home */}
+      <div className={`flex flex-col min-h-screen ${!isHome ? 'lg:pl-60' : ''}`}>
 
-            {/* Logo */}
-            <button
-              onClick={() => setView('home')}
-              className="flex items-center gap-2.5 shrink-0 group"
-              aria-label="Accueil"
-            >
-              <div className="relative">
-                <div className="w-8 h-8 rounded-[10px] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-[10px] tracking-widest text-zinc-950 shadow-[0_0_18px_rgba(34,211,238,0.22)] group-hover:shadow-[0_0_24px_rgba(34,211,238,0.35)] transition-shadow">
-                  DA
-                </div>
-                <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-[#0d1526] transition-colors ${isConnected ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
-              </div>
-              <div className="hidden sm:block leading-tight">
-                <p className="text-white font-bold text-[13px] leading-none tracking-tight">Deriv AI</p>
-                <p className="text-zinc-500 text-[10px] leading-none mt-0.5 tracking-wide">Trading Assistant</p>
-              </div>
-            </button>
-          </div>
+        {/* ── Header ── */}
+        {isHome ? (
+          /* ── Header page d'accueil : logo + nav + CTA ── */
+          <header
+            className="fixed top-0 w-full z-50 border-b backdrop-blur-xl"
+            style={{ background: 'rgba(10,10,10,0.85)', borderColor: 'rgba(60,74,66,0.3)' }}
+          >
+            <div className="flex justify-between items-center h-20 px-8 max-w-7xl mx-auto">
+              {/* Logo */}
+              <button
+                onClick={() => setView('home')}
+                className="font-bold text-xl tracking-tight"
+                style={{ color: '#e5e2e1', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+              >
+                Deriv AI
+              </button>
 
-          {/* ── COL 2 CENTER: nav desktop ── */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {NAV.map((item) => {
-              const isActive = item.key === view
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => setView(item.key)}
-                  className={`
-                    group relative flex items-center gap-2 px-4 py-2 rounded-lg
-                    text-[13px] font-medium transition-all duration-150
-                    ${isActive
-                      ? 'text-white bg-white/[0.08]'
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
-                    }
-                  `}
+              {/* Nav centre */}
+              <nav className="hidden md:flex gap-8 items-center">
+                {[
+                  { key: 'dashboard' as AppView, label: 'Dashboard' },
+                  { key: 'analysis'  as AppView, label: 'Analysis'  },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setView(key)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif', fontSize: 16,
+                      color: '#bbcabf', transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#e5e2e1')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#bbcabf')}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <a
+                  href="#pricing"
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, color: '#bbcabf', textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLAnchorElement).style.color = '#e5e2e1')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLAnchorElement).style.color = '#bbcabf')}
                 >
-                  <span className={`transition-colors ${isActive ? 'text-cyan-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
-                    <item.Icon size={14} />
-                  </span>
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none
-                      ${isActive
-                        ? 'bg-cyan-500/20 text-cyan-300'
-                        : 'bg-white/[0.05] text-zinc-500'
-                      }`}>
-                      {item.badge}
-                    </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-4 right-4 h-px bg-cyan-400/60 rounded-full" />
-                  )}
-                </button>
-              )
-            })}
-          </nav>
+                  Pricing
+                </a>
+              </nav>
 
-          {/* ── COL 3 RIGHT: symbol pill + notifications + status ── */}
-          <div className="flex items-center gap-2 justify-end">
-            {/* Symbol + timeframes pill */}
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
-              <span className="text-[12px] font-mono font-semibold text-zinc-300">{currentSymbol}</span>
-              <span className="text-zinc-600 text-[11px]">·</span>
-              <span className="text-[11px] text-zinc-500 font-mono">M1 M5 M15 H1</span>
+              {/* CTA */}
+              <button
+                onClick={() => setView('dashboard')}
+                style={{
+                  background: '#4edea3', color: '#003824', padding: '10px 24px',
+                  borderRadius: 8, fontWeight: 700, fontSize: 15,
+                  boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none',
+                  cursor: 'pointer', transition: 'all 0.3s',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(78,222,163,0.5)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
+              >
+                Ouvrir le Dashboard
+              </button>
             </div>
+          </header>
+        ) : (
+          /* ── Header vues internes : burger + symbole + notifs ── */
+          <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur-xl">
+            <div className="px-4 sm:px-6 h-14 flex items-center gap-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors shrink-0"
+                aria-label="Ouvrir le menu"
+              >
+                <IconMenu size={17} />
+              </button>
 
-            {/* Notifications */}
-            <NotificationPermission />
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                <span className="text-[12px] font-mono font-semibold text-zinc-300">{currentSymbol}</span>
+                <span className="text-zinc-600 text-[11px] mx-0.5">·</span>
+                <span className="text-[11px] text-zinc-500 font-mono">M1 M5 M15 H1</span>
+              </div>
 
-            {/* Connection status */}
-            <ConnectionStatus />
+              <div className="flex-1" />
+
+              <div className="flex items-center gap-2">
+                <NotificationPermission />
+                <ConnectionStatus />
+              </div>
+            </div>
+          </header>
+        )}
+
+        {/* ── Alerte invalidation ── */}
+        {isInvalidated && !isHome && (
+          <div className="border-b border-red-500/20 bg-red-500/[0.08] text-red-300 text-center py-2 text-[13px] font-semibold px-4 tracking-wide">
+            ⚠ Signal invalidé — conditions cassées · Ne pas entrer en position
           </div>
-        </div>
-      </header>
+        )}
 
-      {/* ── Subbar mobile : symbole + timeframes (caché sur md+) ── */}
-      {view !== 'home' && (
-        <div className="md:hidden border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur">
-          <div className="app-container h-9 flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
-              <span className="text-[12px] font-mono font-semibold text-zinc-200">{currentSymbol}</span>
-            </div>
-            <span className="w-px h-3.5 bg-white/[0.10] shrink-0" />
-            <div className="flex items-center gap-1.5">
-              {['M1','M5','M15','H1'].map(tf => (
-                <span key={tf} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-400 border border-white/[0.06]">
-                  {tf}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+        {/* ── Contenu principal ── */}
+        <main className={`flex-1 w-full ${isHome ? 'pt-20' : 'px-4 sm:px-6 py-6 max-w-7xl mx-auto'}`}>
+          {view === 'home'      && <HomeView onNavigate={setView} />}
+          {view === 'dashboard' && <DashboardView />}
+          {view === 'analysis'  && <AnalysisView />}
+          {view === 'positions' && <PositionsView />}
+        </main>
 
-      {/* ── Alerte invalidation ── */}
-      {isInvalidated && (
-        <div className="border-b border-red-500/20 bg-red-500/8 text-red-300 text-center py-2 text-[13px] font-semibold px-4 z-20 tracking-wide">
-          ⚠ Signal invalidé — conditions cassées · Ne pas entrer en position
-        </div>
-      )}
+        {/* Footer — uniquement sur les vues internes */}
+        {!isHome && (
+          <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-3 flex items-center justify-between mt-auto">
+            <p className="text-[11px] text-zinc-600">© 2026 Deriv AI Trading Assistant</p>
+            <p className="text-[11px] text-zinc-600">Indicatif uniquement · Pas un conseil financier</p>
+          </footer>
+        )}
 
-      {/* ── Main content ── */}
-      <main className="app-container py-6 flex-1">
-        {view === 'home'      && <HomeView onNavigate={setView} />}
-        {view === 'dashboard' && <DashboardView />}
-        {view === 'analysis'  && <AnalysisView />}
-        {view === 'positions' && <PositionsView />}
-      </main>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/[0.06] mt-auto">
-        <div className="app-container py-3 flex items-center justify-between">
-          <p className="text-[11px] text-zinc-600">
-            © 2026 Deriv AI Trading Assistant
-          </p>
-          <p className="text-[11px] text-zinc-600">
-            Indicatif uniquement · Pas un conseil financier
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }

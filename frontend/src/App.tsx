@@ -20,6 +20,13 @@ import { DashboardView } from './views/DashboardView'
 import { AnalysisView } from './views/AnalysisView'
 import { PositionsView } from './views/PositionsView'
 
+const NAV: Array<{ key: AppView; label: string }> = [
+  { key: 'home',      label: 'Accueil' },
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'analysis',  label: 'Analyse' },
+  { key: 'positions', label: 'Positions' },
+]
+
 export default function App() {
   useWebSocket()
   useNotifications()
@@ -36,12 +43,18 @@ export default function App() {
 
   return (
     <div className="app-bg">
+      <Sidebar
+        active={view}
+        onNavigate={setView}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/70 backdrop-blur">
-        <div className="app-container py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div className="app-container py-3 flex items-center justify-between gap-3">
           {/* Logo + titre */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden w-9 h-9 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] text-zinc-200 flex items-center justify-center"
@@ -50,10 +63,29 @@ export default function App() {
               <IconMenu size={18} />
             </button>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400/90 to-blue-500/90 shadow-[0_10px_30px_rgba(34,211,238,0.18)] flex items-center justify-center font-black text-[11px] tracking-wide text-zinc-950 shrink-0">DA</div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-white font-bold text-sm leading-none">Deriv AI Trading Assistant</h1>
               <p className="text-zinc-400 text-xs">{currentSymbol} · 1min / 5min / 15min / 1h</p>
             </div>
+
+            <nav className="hidden lg:flex items-center gap-1 ml-2">
+              {NAV.map((item) => {
+                const isActive = item.key === view
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => setView(item.key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${
+                      isActive
+                        ? 'bg-white/[0.08] border-white/10 text-white'
+                        : 'bg-transparent border-transparent text-zinc-300 hover:bg-white/[0.05] hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                )
+              })}
+            </nav>
           </div>
 
           {/* Connexion */}
@@ -71,22 +103,12 @@ export default function App() {
         </div>
       )}
 
-      <div className="app-container py-5">
-        <div className="flex gap-4">
-          <Sidebar
-            active={view}
-            onNavigate={setView}
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
-          <main className="flex-1 min-w-0">
-            {view === 'home' && <HomeView onNavigate={setView} />}
-            {view === 'dashboard' && <DashboardView />}
-            {view === 'analysis' && <AnalysisView />}
-            {view === 'positions' && <PositionsView />}
-          </main>
-        </div>
-      </div>
+      <main className="app-container py-5">
+        {view === 'home' && <HomeView onNavigate={setView} />}
+        {view === 'dashboard' && <DashboardView />}
+        {view === 'analysis' && <AnalysisView />}
+        {view === 'positions' && <PositionsView />}
+      </main>
 
       <footer className="text-center py-4 text-zinc-500 text-xs border-t border-white/10 mt-6">
         Deriv AI Trading Assistant · Indicatif uniquement · Pas un conseil financier

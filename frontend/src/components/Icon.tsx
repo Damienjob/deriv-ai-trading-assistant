@@ -242,3 +242,40 @@ export function IconMenu(props: Props) {
     </svg>
   )
 }
+
+export function IconTarget(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 12h0" />
+    </svg>
+  )
+}
+
+export function IconCalculator(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <path d="M9 6h6" />
+      <path d="M9 10h.01" />
+      <path d="M12 10h.01" />
+      <path d="M15 10h.01" />
+      <path d="M9 13h.01" />
+      <path d="M12 13h.01" />
+      <path d="M15 13h.01" />
+      <path d="M9 16h6" />
+    </svg>
+  )
+}
+
+export function IconGrid(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 4h7v7H4z" />
+      <path d="M13 4h7v7h-7z" />
+      <path d="M4 13h7v7H4z" />
+      <path d="M13 13h7v7h-7z" />
+    </svg>
+  )
+}

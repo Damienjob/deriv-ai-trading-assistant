@@ -68,4 +68,35 @@
   .btn-strong {
     @apply border-cyan-500/25 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/15;
   }
+
+  .glass-panel {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur shadow-[0_14px_40px_rgba(0,0,0,0.35)];
+  }
+
+  .hero-gradient {
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.22) 0%, transparent 70%);
+  }
+
+  .ticker-wrap {
+    @apply w-full overflow-hidden border-y border-white/10 bg-black/30;
+  }
+
+  .ticker-move {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+
+  .reveal {
+    @apply opacity-0 translate-y-6;
+  }
+
+  .reveal-show {
+    @apply opacity-100 translate-y-0;
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }

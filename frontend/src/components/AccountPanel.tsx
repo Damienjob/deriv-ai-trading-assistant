@@ -3,6 +3,7 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { API_URL } from '../utils/api'
+import { IconRefresh, IconShieldAlert } from './Icon'
 
 interface AccountInfo {
   loginid: string
@@ -99,7 +100,10 @@ export function AccountPanel() {
           </button>
         </div>
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-          <p className="text-red-400 text-sm">⚠ {error}</p>
+          <p className="text-red-400 text-sm flex items-center gap-2">
+            <IconShieldAlert size={16} />
+            {error}
+          </p>
           <p className="text-gray-500 text-xs mt-1">
             Vérifiez que DERIV_API_TOKEN est configuré dans backend/.env
           </p>
@@ -132,7 +136,7 @@ export function AccountPanel() {
           className="text-xs text-gray-400 hover:text-white transition-colors"
           aria-label="Rafraîchir"
         >
-          {loading ? '⏳' : '↻'}
+          <IconRefresh size={16} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
 

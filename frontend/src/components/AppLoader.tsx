@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { IconCheck } from './Icon'
 
 const STEPS = [
   { label: 'Connexion au serveur',         check: (s: ReturnType<typeof useMarketStore.getState>) => s.isConnected },
@@ -66,7 +67,7 @@ export function AppLoader() {
                 active ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300' :
                          'bg-white/[0.03] border border-white/10 text-zinc-500'
               }`}>
-                {done ? '✓' : active ? (
+                {done ? <IconCheck size={14} /> : active ? (
                   <span className="inline-block w-2 h-2 rounded-full bg-cyan-300 animate-pulse" />
                 ) : ''}
               </div>
@@ -80,7 +81,7 @@ export function AppLoader() {
                 {step.label}
                 {active && i === 2 && (
                   <span className="text-cyan-300 text-xs ml-1">
-                    {state.ticks.length === 0 ? '(en attente...)' : '(✓)'}
+                    {state.ticks.length === 0 ? '(en attente...)' : '(OK)'}
                   </span>
                 )}
                 {active && i !== 2 && <span className="text-cyan-300">{dots}</span>}

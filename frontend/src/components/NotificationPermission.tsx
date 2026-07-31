@@ -4,6 +4,7 @@
  * Disparaît quand la permission est accordée.
  */
 import { useState, useEffect } from 'react'
+import { IconBell, IconBellOff } from './Icon'
 
 export function NotificationPermission() {
   const [permission, setPermission] = useState<NotificationPermission>('default')
@@ -22,10 +23,10 @@ export function NotificationPermission() {
     return (
       <span
         title="Notifications activées"
-        className="text-green-400 text-sm select-none"
+        className="text-green-400 select-none"
         aria-label="Notifications activées"
       >
-        🔔
+        <IconBell size={16} />
       </span>
     )
   }
@@ -34,10 +35,10 @@ export function NotificationPermission() {
     return (
       <span
         title="Notifications bloquées dans votre navigateur"
-        className="text-gray-500 text-sm select-none cursor-help"
+        className="text-gray-500 select-none cursor-help"
         aria-label="Notifications bloquées"
       >
-        🔕
+        <IconBellOff size={16} />
       </span>
     )
   }
@@ -64,7 +65,7 @@ export function NotificationPermission() {
                  hover:bg-yellow-500/20 transition-colors disabled:opacity-60"
       aria-label="Activer les notifications"
     >
-      <span>🔔</span>
+      <IconBell size={14} />
       <span>{requesting ? 'Activation...' : 'Activer alertes'}</span>
     </button>
   )

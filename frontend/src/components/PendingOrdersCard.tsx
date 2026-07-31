@@ -3,18 +3,11 @@
  * Affiché quand le signal actuel est incertain ou < 70%.
  */
 import { useMarketStore, type PendingOrder } from '../store/marketStore'
-
-const LEVEL_ICONS: Record<string, string> = {
-  support:    '🟢',
-  resistance: '🔴',
-  fibonacci:  '🌀',
-  bb:         '📊',
-  ema:        '📈',
-}
+import { IconArrowDown, IconArrowUp, IconBell, IconCheck, IconClock, IconPin } from './Icon'
 
 const DIR_CONFIG = {
-  BUY:  { color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/25', icon: '▲' },
-  SELL: { color: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/25',   icon: '▼' },
+  BUY:  { color: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
+  SELL: { color: 'text-red-300',     bg: 'bg-red-500/10',     border: 'border-red-500/25' },
 }
 
 function ConfidenceBar({ value }: { value: number }) {
@@ -33,7 +26,10 @@ function ConfidenceBar({ value }: { value: number }) {
 
 function OrderRow({ order }: { order: PendingOrder }) {
   const dir = DIR_CONFIG[order.direction as keyof typeof DIR_CONFIG] ?? DIR_CONFIG.BUY
-  const icon = LEVEL_ICONS[order.level_type] ?? '📍'
+  const iconColor =
+    order.level_type === 'support' ? 'text-emerald-300' :
+    order.level_type === 'resistance' ? 'text-red-300' :
+    'text-zinc-300'
 
   return (
     <div className={`rounded-xl border p-4 ${
@@ -45,15 +41,23 @@ function OrderRow({ order }: { order: PendingOrder }) {
       {/* En-tête */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span>{icon}</span>
+          <span className={iconColor}>
+            <IconPin size={16} />
+          </span>
           <span className="text-white text-sm font-semibold">{order.level_label}</span>
           <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${dir.bg} ${dir.color} border ${dir.border}`}>
-            {dir.icon} {order.direction}
+            <span className="inline-flex items-center gap-1.5">
+              {order.direction === 'BUY'
+                ? <IconArrowUp size={14} />
+                : <IconArrowDown size={14} />}
+              <span>{order.direction}</span>
+            </span>
           </span>
         </div>
         {order.proximity_alert && (
-          <span className="text-yellow-400 text-xs font-bold animate-pulse">
-            🔔 PROCHE
+          <span className="text-yellow-300 text-xs font-bold animate-pulse flex items-center gap-1.5">
+            <IconBell size={14} />
+            Proche
           </span>
         )}
       </div>
@@ -69,7 +73,10 @@ function OrderRow({ order }: { order: PendingOrder }) {
         <div className="mb-1">
           <p className="text-gray-500 text-xs">Distance</p>
           <p className="text-gray-300 text-sm font-mono">
-            {order.direction === 'BUY' ? '↓' : '↑'} {order.distance_pct.toFixed(3)}%
+            <span className="inline-flex items-center gap-1">
+              {order.direction === 'BUY' ? <IconArrowDown size={14} /> : <IconArrowUp size={14} />}
+              <span>{order.distance_pct.toFixed(3)}%</span>
+            </span>
             <span className="text-gray-500 ml-1">({order.distance_abs.toFixed(4)})</span>
           </p>
         </div>
@@ -88,7 +95,9 @@ function OrderRow({ order }: { order: PendingOrder }) {
           <ul className="space-y-0.5">
             {order.conditions_at_target.map((c, i) => (
               <li key={i} className={`text-xs flex gap-1.5 ${dir.color}`}>
-                <span className="shrink-0">✓</span>
+                <span className="shrink-0">
+                  <IconCheck size={14} />
+                </span>
                 <span className="text-gray-300">{c}</span>
               </li>
             ))}
@@ -120,9 +129,12 @@ export function PendingOrdersCard() {
   if (!shouldShow || orders.length === 0) {
     if (!shouldShow) return null  // signal fort → pas besoin d'ordres en attente
     return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-        <h3 className="text-gray-300 font-semibold text-sm mb-2">⏳ Ordres en attente</h3>
-        <p className="text-gray-500 text-sm text-center py-4">
+      <div className="surface p-5">
+        <h3 className="text-zinc-200 font-semibold text-sm mb-2 flex items-center gap-2">
+          <IconClock size={16} />
+          Ordres en attente
+        </h3>
+        <p className="text-zinc-500 text-sm text-center py-4">
           Calcul des niveaux optimaux en cours...
         </p>
       </div>
@@ -132,19 +144,22 @@ export function PendingOrdersCard() {
   const hasProximity = orders.some(o => o.proximity_alert)
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+    <div className="surface p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-white font-semibold text-sm">
-            ⏳ Attendre — Prix cibles recommandés
+            Attendre — Prix cibles recommandés
           </h3>
-          <p className="text-gray-400 text-xs mt-0.5">
+          <p className="text-zinc-400 text-xs mt-0.5">
             Signal actuel &lt; 70% — entrez seulement à ces niveaux
           </p>
         </div>
         {hasProximity && (
-          <span className="text-yellow-400 text-xs font-bold bg-yellow-500/10 border border-yellow-500/30 px-2.5 py-1 rounded-full animate-pulse">
-            🔔 Niveau proche !
+          <span className="text-yellow-300 text-xs font-bold bg-yellow-500/10 border border-yellow-500/30 px-2.5 py-1 rounded-full animate-pulse">
+            <span className="inline-flex items-center gap-1.5">
+              <IconBell size={14} />
+              Niveau proche
+            </span>
           </span>
         )}
       </div>
@@ -155,9 +170,9 @@ export function PendingOrdersCard() {
         ))}
       </div>
 
-      <p className="text-gray-600 text-xs mt-4 pt-3 border-t border-gray-700/50">
+      <p className="text-zinc-500 text-xs mt-4 pt-3 border-t border-white/10">
         Ces niveaux sont calculés à partir des supports, résistances, Fibonacci et Bollinger Bands.
-        L'alerte 🔔 s'active quand le prix est à moins de 0.3% du niveau.
+        L'alerte s'active quand le prix est à moins de 0.3% du niveau.
       </p>
     </div>
   )

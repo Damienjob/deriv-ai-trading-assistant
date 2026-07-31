@@ -9,6 +9,7 @@
  */
 import { useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconChevronDown, IconChevronUp, IconInfo, IconPlus, IconShieldAlert, IconX } from './Icon'
 import {
   usePositionTracker,
   type OpenPosition,
@@ -105,53 +106,53 @@ function computePositionAnalysis(
 
   if (invalidated) {
     recommendation = 'urgent'
-    recommendationLabel = '🔴 COUPER MAINTENANT'
+    recommendationLabel = 'COUPER MAINTENANT'
     recommendationColor = 'text-red-400'
     exitPrice = currentPrice
     exitReason = 'Invalidation détectée — conditions cassées'
   } else if (lossExceedsMax) {
     // Perte > 2% du capital → couper quelle que soit la direction du signal
     recommendation = 'urgent'
-    recommendationLabel = '🔴 COUPER — Perte max atteinte'
+    recommendationLabel = 'COUPER — Perte max atteinte'
     recommendationColor = 'text-red-400'
     exitPrice = currentPrice
     exitReason = `Perte ${Math.abs(pnl).toFixed(2)}$ dépasse 2% du capital (${maxLossPerPosition.toFixed(2)}$)`
   } else if (signalOpposed) {
     recommendation = 'close'
-    recommendationLabel = '🚨 Fermer'
+    recommendationLabel = 'Fermer'
     recommendationColor = 'text-red-400'
     exitPrice = currentPrice
     exitReason = 'Signal retourné — sortir au prix actuel'
   } else if (lossExceedsWarn && signalType === 'NEUTRAL') {
     // Perte > 1% + signal neutre → alléger
     recommendation = 'reduce'
-    recommendationLabel = '⚠ Alléger'
+    recommendationLabel = 'Alléger'
     recommendationColor = 'text-yellow-400'
     exitPrice = tpAnalysis
     exitReason = `Perte ${Math.abs(pnl).toFixed(2)}$ > 1% capital · Signal neutre — réduire l'exposition`
   } else if (signalType === 'NEUTRAL' || confidence < 60) {
     if (pnl > 0) {
       recommendation = 'reduce'
-      recommendationLabel = '⚠ Alléger'
+      recommendationLabel = 'Alléger'
       recommendationColor = 'text-yellow-400'
       exitPrice = tpAnalysis
       exitReason = 'Signal neutre — sécuriser les gains'
     } else {
       recommendation = 'hold'
-      recommendationLabel = '⏳ Attendre'
+      recommendationLabel = 'Attendre'
       recommendationColor = 'text-yellow-400'
       exitPrice = tpAnalysis
       exitReason = 'En attente de confirmation — ne pas couper prématurément'
     }
   } else if (signalAligned && confidence >= 60) {
     recommendation = 'hold'
-    recommendationLabel = '✅ Conserver'
+    recommendationLabel = 'Conserver'
     recommendationColor = 'text-green-400'
     exitPrice = tpAnalysis
     exitReason = `Signal aligné (${confidence}%) — laisser courir vers le TP`
   } else {
     recommendation = 'hold'
-    recommendationLabel = '⏳ Attendre'
+    recommendationLabel = 'Attendre'
     recommendationColor = 'text-gray-400'
     exitPrice = tpAnalysis
     exitReason = 'Pas de signal clair — maintenir la position'
@@ -218,7 +219,10 @@ function AddPositionForm({ currentSymbol }: { currentSymbol: string }) {
                 : 'bg-gray-800 text-gray-400 hover:text-white'
             }`}
           >
-            ▲ BUY
+            <span className="inline-flex items-center gap-1.5">
+              <IconArrowUp size={14} />
+              <span>BUY</span>
+            </span>
           </button>
           <button
             onClick={() => setDirection('SELL')}
@@ -228,7 +232,10 @@ function AddPositionForm({ currentSymbol }: { currentSymbol: string }) {
                 : 'bg-gray-800 text-gray-400 hover:text-white'
             }`}
           >
-            ▼ SELL
+            <span className="inline-flex items-center gap-1.5">
+              <IconArrowDown size={14} />
+              <span>SELL</span>
+            </span>
           </button>
         </div>
 
@@ -286,7 +293,10 @@ function AddPositionForm({ currentSymbol }: { currentSymbol: string }) {
           className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold
                      rounded-lg transition-colors self-end"
         >
-          ➕ Ajouter
+          <span className="inline-flex items-center gap-2">
+            <IconPlus size={16} />
+            <span>Ajouter</span>
+          </span>
         </button>
       </div>
 
@@ -334,7 +344,7 @@ function PortfolioSummary({
       <div className="bg-gray-700/50 rounded-xl px-3 py-2 text-center">
         <p className="text-gray-500 text-xs">Fermer / Alléger</p>
         <p className={`font-bold ${toUrgent > 0 ? 'text-red-400 animate-pulse' : toClose > 0 ? 'text-red-400' : 'text-yellow-400'}`}>
-          {toUrgent > 0 ? `🔴 ${toUrgent} URGENT` : `${toClose + toReduce}`}
+          {toUrgent > 0 ? `${toUrgent} URGENT` : `${toClose + toReduce}`}
         </p>
       </div>
     </div>
@@ -371,8 +381,9 @@ function PositionRow({
 
       {/* Direction */}
       <td className="px-3 py-2.5">
-        <span className={`text-sm font-bold ${dirColor}`}>
-          {isBuy ? '▲ BUY' : '▼ SELL'}
+        <span className={`text-sm font-bold ${dirColor} inline-flex items-center gap-1.5`}>
+          {isBuy ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />}
+          <span>{pos.direction}</span>
         </span>
         <p className="text-gray-600 text-xs font-mono">{time}</p>
       </td>
@@ -445,7 +456,7 @@ function PositionRow({
           aria-label="Supprimer la position"
           title="Supprimer"
         >
-          ×
+          <IconX size={16} />
         </button>
       </td>
     </tr>
@@ -531,7 +542,10 @@ export function PositionTracker() {
             className="text-gray-400 hover:text-white transition-colors text-sm px-2 py-1"
             aria-label={collapsed ? 'Déplier' : 'Replier'}
           >
-            {collapsed ? '▼ Déplier' : '▲ Replier'}
+            <span className="inline-flex items-center gap-1.5">
+              {collapsed ? <IconChevronDown size={16} /> : <IconChevronUp size={16} />}
+              <span>{collapsed ? 'Déplier' : 'Replier'}</span>
+            </span>
           </button>
         </div>
       </div>
@@ -542,15 +556,17 @@ export function PositionTracker() {
           {/* Alerte urgente */}
           {hasUrgent && (
             <div className="bg-red-600/20 border border-red-500/60 rounded-xl px-4 py-3 animate-pulse">
-              <p className="text-red-300 font-bold text-sm">
-                🔴 INVALIDATION DÉTECTÉE — Coupez vos positions dès que possible
+              <p className="text-red-300 font-bold text-sm inline-flex items-center gap-2">
+                <IconShieldAlert size={16} />
+                <span>INVALIDATION DÉTECTÉE — Coupez vos positions dès que possible</span>
               </p>
             </div>
           )}
           {!hasUrgent && hasClose && (
             <div className="bg-red-900/20 border border-red-500/30 rounded-xl px-4 py-3">
-              <p className="text-red-300 font-semibold text-sm">
-                🚨 Signal retourné — Fermez les positions en sens contraire
+              <p className="text-red-300 font-semibold text-sm inline-flex items-center gap-2">
+                <IconInfo size={16} />
+                <span>Signal retourné — Fermez les positions en sens contraire</span>
               </p>
             </div>
           )}
@@ -573,10 +589,12 @@ export function PositionTracker() {
                     <th className="px-3 py-2.5 text-right">TP Analyse</th>
                     <th className="px-3 py-2.5 text-right">SL Analyse</th>
                     <th className="px-3 py-2.5 text-right">
-                      <span className="text-blue-400">Prix de sortie ↗</span>
+                      <span className="text-blue-400">Prix de sortie</span>
                     </th>
                     <th className="px-3 py-2.5">Recommandation</th>
-                    <th className="px-3 py-2.5 text-center">×</th>
+                    <th className="px-3 py-2.5 text-center">
+                      <IconX size={14} />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -601,7 +619,10 @@ export function PositionTracker() {
           <AddPositionForm currentSymbol={currentSymbol} />
 
           <p className="text-gray-700 text-xs">
-            ⚠ Les prix TP/SL et recommandations sont calculés par l'analyse MTF · Pas un conseil financier
+            <span className="inline-flex items-center gap-1.5">
+              <IconInfo size={14} />
+              <span>Les prix TP/SL et recommandations sont calculés par l'analyse MTF · Pas un conseil financier</span>
+            </span>
           </p>
         </div>
       )}

@@ -1,17 +1,19 @@
 /**
  * Carte signal MTF — avec indicateur de stabilité (verrou de signal).
  *
- * 🔒 Signal verrouillé = calculé à la clôture d'une bougie M5, stable 5min
- * 🔄 Signal en cours  = recalcul en cours (nouvelle bougie)
+ * Signal verrouillé = calculé à la clôture d'une bougie M5, stable 5min
+ * Signal en cours  = recalcul en cours (nouvelle bougie)
  */
+import type { ComponentType } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconArrowsLeftRight, IconClock, IconLock, IconRefresh } from './Icon'
 
 const SIGNAL_CONFIG = {
-  BUY:     { color: 'text-emerald-300', tint: 'bg-emerald-500/5', ring: 'ring-1 ring-emerald-500/25', chip: 'chip-success', icon: '▲' },
-  SELL:    { color: 'text-red-300',     tint: 'bg-red-500/5',     ring: 'ring-1 ring-red-500/25',     chip: 'chip-danger',  icon: '▼' },
-  NEUTRAL: { color: 'text-amber-300',   tint: 'bg-amber-500/5',   ring: 'ring-1 ring-amber-500/20',   chip: '',             icon: '◆' },
-  WAIT:    { color: 'text-zinc-300',    tint: '',                ring: '',                           chip: '',             icon: '◌' },
-}
+  BUY:     { color: 'text-emerald-300', tint: 'bg-emerald-500/5', ring: 'ring-1 ring-emerald-500/25', chip: 'chip-success', Icon: IconArrowUp },
+  SELL:    { color: 'text-red-300',     tint: 'bg-red-500/5',     ring: 'ring-1 ring-red-500/25',     chip: 'chip-danger',  Icon: IconArrowDown },
+  NEUTRAL: { color: 'text-amber-300',   tint: 'bg-amber-500/5',   ring: 'ring-1 ring-amber-500/20',   chip: '',             Icon: IconArrowsLeftRight },
+  WAIT:    { color: 'text-zinc-300',    tint: '',                ring: '',                           chip: '',             Icon: IconClock },
+} satisfies Record<string, { color: string; tint: string; ring: string; chip: string; Icon: ComponentType<any> }>
 
 function CountdownBar({ remaining, total }: { remaining: number; total: number }) {
   const pct = total > 0 ? Math.max(0, (remaining / total) * 100) : 0
@@ -60,9 +62,15 @@ export function SignalCard() {
           <h3 className="text-zinc-200 font-semibold text-sm">Signal MTF</h3>
           {/* Indicateur de stabilité */}
           {isLocked && sigType !== 'WAIT' && sigType !== 'NEUTRAL' ? (
-            <span className="chip chip-success">Stable</span>
+            <span className="chip chip-success">
+              <IconLock className="opacity-90" size={14} />
+              Stable
+            </span>
           ) : (
-            <span className="chip chip-accent animate-pulse">Analyse</span>
+            <span className="chip chip-accent animate-pulse">
+              <IconRefresh className="opacity-90" size={14} />
+              Analyse
+            </span>
           )}
         </div>
         {signal && signal.confidence > 0 && (
@@ -75,7 +83,10 @@ export function SignalCard() {
       {/* Signal principal */}
       <div>
         <p className={`text-2xl font-bold ${cfg.color}`}>
-          {cfg.icon} {signal?.label ?? 'Attente'}
+          <span className="inline-flex items-center gap-2">
+            <cfg.Icon size={22} />
+            <span>{signal?.label ?? 'Attente'}</span>
+          </span>
         </p>
         {regime && (
           <p className={`text-xs mt-1 font-semibold ${regimeColor}`}>

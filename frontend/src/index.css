@@ -13,6 +13,14 @@
     @apply bg-zinc-950 text-zinc-100 antialiased;
     font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1, "cv02" 1;
   }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
 }
 
 @layer components {
@@ -54,7 +62,7 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:bg-white/[0.07] active:bg-white/[0.09];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:bg-white/[0.07] active:bg-white/[0.09] cursor-pointer;
   }
 
   .btn-strong {

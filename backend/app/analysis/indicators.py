@@ -697,7 +697,7 @@ def recommended_stake(
         return {
             "amount": 0.0,
             "pct_of_capital": 0.0,
-            "reason": "⏳ Signal insuffisant — pas d'entrée recommandée",
+            "reason": "🚫🚫 Signal insuffisant — pas d'entrée recommandée",
             "enter_now": False,
         }
     if mtf_alignment < 2:

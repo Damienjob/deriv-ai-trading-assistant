@@ -28,6 +28,7 @@ import { FVGPanel } from './components/FVGPanel'
 import { PositionTracker } from './components/PositionTracker'
 import { NotificationPermission } from './components/NotificationPermission'
 import { useNotifications } from './hooks/useNotifications'
+import { IconChevronDown, IconChevronUp } from './components/Icon'
 
 export default function App() {
   useWebSocket()
@@ -111,9 +112,14 @@ export default function App() {
               : `bg-white/[0.04] ${btnBorder} text-zinc-300 hover:text-white hover:bg-white/[0.06]`
           }`}
         >
-          {showDetails
-            ? '▲ Masquer l\'analyse détaillée'
-            : '▼ Voir l\'analyse complète (MTF · Stratégies · FVG · Confirmation · Compte)'}
+          <span className="inline-flex items-center gap-2 justify-center">
+            {showDetails ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+            <span>
+              {showDetails
+                ? 'Masquer l\'analyse détaillée'
+                : 'Voir l\'analyse complète (MTF · Stratégies · FVG · Confirmation · Compte)'}
+            </span>
+          </span>
         </button>
 
         {/* ── Détails dépliables ── */}

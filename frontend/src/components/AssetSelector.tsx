@@ -14,7 +14,7 @@ const ASSETS = {
     { symbol: 'R_100',   label: 'V100',     desc: 'Volatilité 100% — nécessite un vrai compte' },
     { symbol: '1HZ10V',  label: 'V10(1s)',  desc: 'Volatilité 10 — 1 seconde (démo OK)' },
     { symbol: '1HZ25V',  label: 'V25(1s)',  desc: 'Volatilité 25 — 1 seconde (démo OK)' },
-    { symbol: '1HZ50V',  label: 'V50(1s)',  desc: 'Volatilité 50 — 1 seconde (démo OK) ★' },
+    { symbol: '1HZ50V',  label: 'V50(1s)',  desc: 'Volatilité 50 — 1 seconde (démo OK)' },
     { symbol: '1HZ75V',  label: 'V75(1s)',  desc: 'Volatilité 75 — 1 seconde (démo OK)' },
     { symbol: '1HZ100V', label: 'V100(1s)', desc: 'Volatilité 100 — 1 seconde (démo OK)' },
   ],

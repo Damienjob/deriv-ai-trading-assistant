@@ -134,7 +134,7 @@ export function useNotifications() {
       canNotify('signal', COOLDOWN.signal)
     ) {
       const isBuy   = sig.type === 'BUY'
-      const title   = isBuy ? '▲ SIGNAL BUY — Entrée possible' : '▼ SIGNAL SELL — Entrée possible'
+      const title   = isBuy ? 'SIGNAL BUY — Entrée possible' : 'SIGNAL SELL — Entrée possible'
       const body    = [
         `${currentSymbol} @ ${price.toFixed(4)}`,
         `Confiance : ${sig.confidence}%`,
@@ -156,7 +156,7 @@ export function useNotifications() {
       canNotify('signal_reversal', COOLDOWN.signal)
     ) {
       sendBrowserNotif(
-        `↩ RETOURNEMENT — ${prevSignal.current} → ${sig.type}`,
+        `RETOURNEMENT — ${prevSignal.current} -> ${sig.type}`,
         `${currentSymbol} @ ${price.toFixed(4)} · Fermez vos positions ${prevSignal.current}`,
         'signal_reversal',
       )
@@ -224,7 +224,7 @@ export function useNotifications() {
         const pnlSign = pnlPips >= 0 ? '+' : ''
         
         sendBrowserNotif(
-          `🔴 COUPER POSITION — ${pos.direction} ${pos.lot} lots`,
+          `COUPER POSITION — ${pos.direction} ${pos.lot} lots`,
           `${currentSymbol} · Entrée : ${pos.entryPrice.toFixed(4)} (${pnlSign}${pnlPips.toFixed(1)} pips)\n${reason}`,
           `${posKey}-urgent`,
         )
@@ -242,7 +242,7 @@ export function useNotifications() {
       if (nearTp && prevPositionReco.current[pos.id] !== 'near_tp'
           && canNotify(`${posKey}-tp`, COOLDOWN.position)) {
         sendBrowserNotif(
-          `💰 Proche du TP — ${pos.direction} ${pos.lot} lots`,
+          `Proche du TP — ${pos.direction} ${pos.lot} lots`,
           `${currentSymbol} · Entrée ${pos.entryPrice.toFixed(4)}\nTP analyse : ${tp.toFixed(4)} (à ${distToTp.toFixed(3)}%)`,
           `${posKey}-tp`,
         )
@@ -259,7 +259,7 @@ export function useNotifications() {
       if (nearSl && prevPositionReco.current[pos.id] !== 'near_sl'
           && canNotify(`${posKey}-sl`, COOLDOWN.position)) {
         sendBrowserNotif(
-          `⚠ Proche du SL — ${pos.direction} ${pos.lot} lots`,
+          `Proche du SL — ${pos.direction} ${pos.lot} lots`,
           `${currentSymbol} · Entrée ${pos.entryPrice.toFixed(4)}\nSL analyse : ${sl.toFixed(4)} (à ${distToSl.toFixed(3)}%)`,
           `${posKey}-sl`,
         )

@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
 import { API_URL } from '../utils/api'
+import { IconCheck } from './Icon'
 
 export function CapitalSettings() {
   const { baseAmount, setBaseAmount } = useMarketStore()
@@ -62,7 +63,14 @@ export function CapitalSettings() {
               : 'btn-strong'
           }`}
         >
-          {saved ? '✓ Enregistré' : 'Appliquer'}
+          {saved ? (
+            <span className="inline-flex items-center gap-2">
+              <IconCheck size={16} />
+              <span>Enregistré</span>
+            </span>
+          ) : (
+            'Appliquer'
+          )}
         </button>
       </div>
 

@@ -2,7 +2,9 @@
  * Carte principale affichant le prix actuel, la tendance et les stats.
  */
 
+import type { ComponentType } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconArrowsLeftRight } from './Icon'
 
 const SYMBOL_LABELS: Record<string, string> = {
   R_10:     'Volatility 10 Index',
@@ -22,10 +24,10 @@ export function PriceCard() {
 
   const tfM15 = analysis?.timeframes?.['15min'] ?? analysis?.timeframes?.['5min']
   const trend = tfM15?.trend
-  const trendConfig: Record<string, { color: string; icon: string }> = {
-    up:      { color: 'text-green-400', icon: '▲' },
-    down:    { color: 'text-red-400',   icon: '▼' },
-    neutral: { color: 'text-yellow-400', icon: '◆' },
+  const trendConfig: Record<string, { color: string; Icon: ComponentType<any> }> = {
+    up:      { color: 'text-emerald-300', Icon: IconArrowUp },
+    down:    { color: 'text-red-300',     Icon: IconArrowDown },
+    neutral: { color: 'text-amber-300',   Icon: IconArrowsLeftRight },
   }
   const tc = trendConfig[trend?.direction ?? 'neutral']
 
@@ -80,7 +82,10 @@ export function PriceCard() {
         <div>
           <p className="text-zinc-400 text-xs mb-1">Tendance</p>
           <p className={`font-semibold ${tc.color}`}>
-            {tc.icon} {trend?.label ?? 'Neutre'}
+            <span className="inline-flex items-center gap-1.5">
+              <tc.Icon size={16} />
+              <span>{trend?.label ?? 'Neutre'}</span>
+            </span>
             {trend?.strength ? ` — ${trend.strength}%` : ''}
           </p>
         </div>

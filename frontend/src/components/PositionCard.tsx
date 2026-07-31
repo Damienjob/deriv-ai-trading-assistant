@@ -2,6 +2,7 @@
  * Carte de position — TP, SL, lots, durée, répétitions, sortie.
  */
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconClock } from './Icon'
 
 function Row({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
@@ -19,9 +20,9 @@ export function PositionCard() {
 
   if (!pos) {
     return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-        <h3 className="text-gray-300 font-semibold text-sm mb-2">Plan de position</h3>
-        <p className="text-gray-500 text-sm text-center py-6">
+      <div className="surface p-5">
+        <h3 className="text-zinc-200 font-semibold text-sm mb-2">Plan de position</h3>
+        <p className="text-zinc-500 text-sm text-center py-6">
           {sig?.type === 'WAIT' || !sig
             ? 'En attente d\'un signal...'
             : 'Signal insuffisant — pas de position suggérée'}
@@ -35,11 +36,12 @@ export function PositionCard() {
   const dirBg = isBuy ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+    <div className="surface p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-gray-300 font-semibold text-sm">Plan de position</h3>
-        <span className={`text-sm font-bold px-3 py-1 rounded-lg border ${dirBg} ${dirColor}`}>
-          {isBuy ? '▲ BUY' : '▼ SELL'}
+        <h3 className="text-zinc-200 font-semibold text-sm">Plan de position</h3>
+        <span className={`text-sm font-bold px-3 py-1 rounded-lg border ${dirBg} ${dirColor} inline-flex items-center gap-1.5`}>
+          {isBuy ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />}
+          <span>{pos.direction}</span>
         </span>
       </div>
 
@@ -74,7 +76,10 @@ export function PositionCard() {
 
       {/* Durée */}
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mb-3">
-        <p className="text-blue-300 text-xs font-semibold">⏱ Durée suggérée</p>
+        <p className="text-blue-300 text-xs font-semibold inline-flex items-center gap-1.5">
+          <IconClock size={14} />
+          <span>Durée suggérée</span>
+        </p>
         <p className="text-white text-sm mt-0.5">{pos.duration.label}</p>
       </div>
 

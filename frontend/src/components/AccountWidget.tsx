@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from 'react'
 import { API_URL } from '../utils/api'
+import { IconChevronRight, IconKey, IconRefresh, IconX } from './Icon'
 
 interface AccountSummary {
   loginid: string
@@ -75,27 +76,29 @@ export function AccountWidget({ onOpenDetails }: Props) {
       <div className="flex items-center gap-2">
         <button
           onClick={() => { onOpenDetails(); fetchAccount() }}
-          className="flex items-center gap-2 bg-gray-700/60 hover:bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 transition-all"
+          className="btn py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]"
           title="Voir le compte Deriv"
         >
-          <div className={`w-2 h-2 rounded-full ${account.is_virtual ? 'bg-yellow-400' : 'bg-green-400'}`} />
+          <div className={`w-2 h-2 rounded-full ${account.is_virtual ? 'bg-amber-400' : 'bg-emerald-400'}`} />
           <div className="text-left">
             <p className="text-white text-xs font-semibold leading-none">
               {account.balance.toFixed(2)} {account.currency}
             </p>
-            <p className="text-gray-400 text-xs leading-none mt-0.5">
+            <p className="text-zinc-400 text-xs leading-none mt-0.5">
               {account.loginid} · {account.is_virtual ? 'Démo' : 'Réel'}
             </p>
           </div>
-          <span className="text-gray-500 text-xs">›</span>
+          <span className="text-zinc-500">
+            <IconChevronRight size={16} />
+          </span>
         </button>
         <button
           onClick={fetchAccount}
           disabled={loading}
-          className="text-gray-500 hover:text-white text-sm transition-colors"
+          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
           title="Rafraîchir"
         >
-          {loading ? '⏳' : '↻'}
+          <IconRefresh size={16} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
     )
@@ -107,9 +110,9 @@ export function AccountWidget({ onOpenDetails }: Props) {
       {!showTokenInput ? (
         <button
           onClick={() => setShowTokenInput(true)}
-          className="flex items-center gap-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+          className="btn btn-strong py-1.5 rounded-lg text-xs"
         >
-          <span>🔑</span>
+          <IconKey size={14} />
           Connecter compte Deriv
         </button>
       ) : (
@@ -120,22 +123,22 @@ export function AccountWidget({ onOpenDetails }: Props) {
             value={tokenInput}
             onChange={e => setTokenInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && saveToken()}
-            className="bg-gray-700 border border-gray-600 text-white text-xs rounded-lg px-3 py-1.5 w-52
-                       focus:outline-none focus:border-blue-500 placeholder-gray-500"
+            className="bg-black/20 border border-white/10 text-white text-xs rounded-lg px-3 py-1.5 w-56
+                       focus:outline-none focus:border-cyan-500/40 placeholder-zinc-500"
             autoFocus
           />
           <button
             onClick={saveToken}
             disabled={!tokenInput.trim() || loading}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold disabled:opacity-50"
+            className="btn btn-strong py-1.5 rounded-lg text-xs disabled:opacity-50"
           >
             {loading ? '...' : 'OK'}
           </button>
           <button
             onClick={() => { setShowTokenInput(false); setTokenInput('') }}
-            className="text-gray-500 hover:text-white text-xs"
+            className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-zinc-300 transition-colors hover:bg-white/[0.06]"
           >
-            ✕
+            <IconX size={14} />
           </button>
         </div>
       )}

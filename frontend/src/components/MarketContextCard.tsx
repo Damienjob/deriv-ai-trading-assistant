@@ -2,14 +2,16 @@
  * Carte Contexte du Marché — Phase, Structure HH/HL, Niveaux swing, Volatilité.
  * Correspond à l'Étape 1 du flux professionnel.
  */
+import type { ComponentType } from 'react'
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconArrowsLeftRight, IconBolt, IconHelpCircle } from './Icon'
 
-const PHASE_CONFIG: Record<string, { color: string; icon: string; bg: string }> = {
-  trending_up:   { color: 'text-green-400',  icon: '📈', bg: 'bg-green-500/10 border-green-500/25'  },
-  trending_down: { color: 'text-red-400',    icon: '📉', bg: 'bg-red-500/10 border-red-500/25'      },
-  breakout:      { color: 'text-orange-400', icon: '⚡', bg: 'bg-orange-500/10 border-orange-500/25'},
-  ranging:       { color: 'text-yellow-400', icon: '↔',  bg: 'bg-yellow-500/10 border-yellow-500/25'},
-  unknown:       { color: 'text-gray-400',   icon: '❓', bg: 'bg-gray-700/40 border-gray-600'       },
+const PHASE_CONFIG: Record<string, { color: string; Icon: ComponentType<any>; bg: string }> = {
+  trending_up:   { color: 'text-emerald-300', Icon: IconArrowUp,         bg: 'bg-emerald-500/10 border-emerald-500/25' },
+  trending_down: { color: 'text-red-300',     Icon: IconArrowDown,       bg: 'bg-red-500/10 border-red-500/25' },
+  breakout:      { color: 'text-amber-300',   Icon: IconBolt,            bg: 'bg-amber-500/10 border-amber-500/25' },
+  ranging:       { color: 'text-cyan-200',    Icon: IconArrowsLeftRight, bg: 'bg-cyan-500/10 border-cyan-500/25' },
+  unknown:       { color: 'text-zinc-300',    Icon: IconHelpCircle,      bg: 'bg-white/[0.03] border-white/10' },
 }
 
 const VOL_CONFIG: Record<string, { color: string }> = {
@@ -37,9 +39,9 @@ export function MarketContextCard() {
 
   if (!ctx) {
     return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-        <h3 className="text-gray-300 font-semibold text-sm mb-2">Contexte du marché</h3>
-        <p className="text-gray-500 text-sm text-center py-4">En attente des bougies M15...</p>
+      <div className="surface p-5">
+        <h3 className="text-zinc-200 font-semibold text-sm mb-2">Contexte du marché</h3>
+        <p className="text-zinc-500 text-sm text-center py-4">En attente des bougies M15...</p>
       </div>
     )
   }
@@ -52,28 +54,28 @@ export function MarketContextCard() {
     ctx.structure === 'bearish' ? 'text-red-400'   : 'text-yellow-400'
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-      <h3 className="text-gray-300 font-semibold text-sm mb-4">
+    <div className="surface p-5">
+      <h3 className="text-zinc-200 font-semibold text-sm mb-4">
         Étape 1 — Contexte du marché
       </h3>
 
       {/* Phase */}
       <div className={`rounded-xl border px-4 py-3 mb-4 ${phaseCfg.bg}`}>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">{phaseCfg.icon}</span>
+          <phaseCfg.Icon size={18} className={phaseCfg.color} />
           <span className={`font-bold text-sm ${phaseCfg.color}`}>{ctx.phase_label}</span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-zinc-400">
           <span>Force : <span className={`font-bold ${phaseCfg.color}`}>{ctx.phase_strength}%</span></span>
           <span>Durée : <span className="text-white font-mono">{ctx.phase_duration} bougies</span></span>
         </div>
         {/* Barre de force */}
-        <div className="mt-2 bg-gray-700/60 rounded-full h-1.5">
+        <div className="mt-2 bg-white/10 rounded-full h-1.5">
           <div
             className={`h-1.5 rounded-full ${
-              ctx.phase === 'trending_up' ? 'bg-green-500' :
+              ctx.phase === 'trending_up' ? 'bg-emerald-500' :
               ctx.phase === 'trending_down' ? 'bg-red-500' :
-              ctx.phase === 'breakout' ? 'bg-orange-500' : 'bg-yellow-500'
+              ctx.phase === 'breakout' ? 'bg-amber-500' : 'bg-cyan-500'
             }`}
             style={{ width: `${ctx.phase_strength}%` }}
           />
@@ -82,27 +84,32 @@ export function MarketContextCard() {
 
       {/* Structure + Volatilité */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-gray-700/40 rounded-lg px-3 py-2">
-          <p className="text-gray-500 text-xs mb-1">Structure</p>
-          <p className={`text-sm font-semibold ${structureColor}`}>
-            {ctx.structure === 'bullish' ? '▲ Haussière (HH+HL)' :
-             ctx.structure === 'bearish' ? '▼ Baissière (LH+LL)' : '◆ Mixte'}
+        <div className="rounded-lg px-3 py-2 border border-white/10 bg-white/[0.03]">
+          <p className="text-zinc-500 text-xs mb-1">Structure</p>
+          <p className={`text-sm font-semibold flex items-center gap-2 ${structureColor}`}>
+            {ctx.structure === 'bullish' ? <IconArrowUp size={16} /> :
+             ctx.structure === 'bearish' ? <IconArrowDown size={16} /> :
+             <IconArrowsLeftRight size={16} />}
+            <span>
+              {ctx.structure === 'bullish' ? 'Haussière (HH+HL)' :
+               ctx.structure === 'bearish' ? 'Baissière (LH+LL)' : 'Mixte'}
+            </span>
           </p>
         </div>
-        <div className="bg-gray-700/40 rounded-lg px-3 py-2">
-          <p className="text-gray-500 text-xs mb-1">Volatilité</p>
+        <div className="rounded-lg px-3 py-2 border border-white/10 bg-white/[0.03]">
+          <p className="text-zinc-500 text-xs mb-1">Volatilité</p>
           <p className={`text-sm font-semibold ${volCfg.color}`}>
             {ctx.volatility?.label ?? '—'}
           </p>
           {ctx.volatility?.atr_pct != null && (
-            <p className="text-gray-500 text-xs">ATR {ctx.volatility.atr_pct.toFixed(3)}%</p>
+            <p className="text-zinc-500 text-xs">ATR {ctx.volatility.atr_pct.toFixed(3)}%</p>
           )}
         </div>
       </div>
 
       {/* Niveaux structurels */}
       <div>
-        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">
+        <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide mb-2">
           Niveaux clés (50 bougies)
         </p>
         <div className="space-y-0">

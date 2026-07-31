@@ -10,6 +10,7 @@
  *  5. BUY/SELL CONFIRMÉ    — signal confirmé, entrée possible
  */
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconStar } from './Icon'
 
 // ─────────────────────────────────────────────────────────────
 // Sous-composant : Buy Limit / Sell Limit
@@ -76,7 +77,8 @@ function LimitOrderCard({
           pa.pattern.strength === 'strong' ? (isBuy ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300')
           : 'bg-gray-700 text-gray-300'
         }`}>
-          ◆ {pa.pattern_label}
+          <IconStar size={14} />
+          <span>{pa.pattern_label}</span>
         </div>
       )}
 
@@ -250,8 +252,9 @@ export function DecisionBanner() {
                 <div className="flex items-center gap-4 flex-wrap text-sm">
                   <span className="text-gray-400 text-xs">
                     Direction :{' '}
-                    <span className={`font-bold ${nearestFvg.direction === 'bullish' ? 'text-green-400' : 'text-red-400'}`}>
-                      {nearestFvg.direction === 'bullish' ? '▲ BUY' : '▼ SELL'}
+                    <span className={`font-bold inline-flex items-center gap-1.5 ${nearestFvg.direction === 'bullish' ? 'text-green-400' : 'text-red-400'}`}>
+                      {nearestFvg.direction === 'bullish' ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />}
+                      <span>{nearestFvg.direction === 'bullish' ? 'BUY' : 'SELL'}</span>
                     </span>
                   </span>
                   <span className="text-gray-400 text-xs">
@@ -347,7 +350,9 @@ export function DecisionBanner() {
       <div className="surface p-5 bg-emerald-500/5 ring-1 ring-emerald-500/25 shadow-[0_18px_50px_rgba(16,185,129,0.08)]">
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
-            <span className="text-3xl">▲</span>
+            <span className="text-green-300">
+              <IconArrowUp size={30} />
+            </span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
@@ -432,7 +437,9 @@ export function DecisionBanner() {
     <div className="surface p-5 bg-red-500/5 ring-1 ring-red-500/25 shadow-[0_18px_50px_rgba(239,68,68,0.08)]">
       <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/25 flex items-center justify-center shrink-0">
-          <span className="text-3xl">▼</span>
+          <span className="text-red-300">
+            <IconArrowDown size={30} />
+          </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap mb-1">

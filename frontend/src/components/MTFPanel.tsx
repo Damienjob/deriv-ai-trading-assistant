@@ -3,19 +3,39 @@
  * Affiche le signal directionnel de chaque TF avec ses indicateurs clés.
  */
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconArrowsLeftRight, IconCheck, IconInfo, IconShieldAlert } from './Icon'
 
 const TF_ORDER = ['1h', '30min', '15min', '5min', '1min']
 
 function DirBadge({ dir }: { dir: number }) {
-  if (dir === 1)  return <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">▲ Haussier</span>
-  if (dir === -1) return <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400">▼ Baissier</span>
-  return               <span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-700 text-gray-400">◆ Neutre</span>
+  if (dir === 1)  return <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400 inline-flex items-center gap-1.5"><IconArrowUp size={14} />Haussier</span>
+  if (dir === -1) return <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400 inline-flex items-center gap-1.5"><IconArrowDown size={14} />Baissier</span>
+  return               <span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-700 text-gray-400 inline-flex items-center gap-1.5"><IconArrowsLeftRight size={14} />Neutre</span>
 }
 
 function RegimeBadge({ regime }: { regime: string }) {
-  if (regime === 'unstable') return <span className="text-xs text-red-400 font-semibold">⚠ Instable</span>
-  if (regime === 'calm')     return <span className="text-xs text-green-400">✓ Calme</span>
-  return                            <span className="text-xs text-yellow-400">~ Normal</span>
+  if (regime === 'unstable') {
+    return (
+      <span className="text-xs text-red-400 font-semibold inline-flex items-center gap-1.5">
+        <IconShieldAlert size={14} />
+        Instable
+      </span>
+    )
+  }
+  if (regime === 'calm') {
+    return (
+      <span className="text-xs text-green-400 inline-flex items-center gap-1.5">
+        <IconCheck size={14} />
+        Calme
+      </span>
+    )
+  }
+  return (
+    <span className="text-xs text-yellow-400 inline-flex items-center gap-1.5">
+      <IconInfo size={14} />
+      Normal
+    </span>
+  )
 }
 
 export function MTFPanel() {
@@ -23,9 +43,9 @@ export function MTFPanel() {
 
   if (!analysis) {
     return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
-        <h3 className="text-gray-300 font-semibold text-sm mb-3">Analyse Multi-Timeframe</h3>
-        <p className="text-gray-500 text-sm text-center py-6">Chargement des bougies...</p>
+      <div className="surface p-5">
+        <h3 className="text-zinc-200 font-semibold text-sm mb-3">Analyse Multi-Timeframe</h3>
+        <p className="text-zinc-500 text-sm text-center py-6">Chargement des bougies...</p>
       </div>
     )
   }
@@ -34,19 +54,22 @@ export function MTFPanel() {
   const mtf = analysis.mtf
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+    <div className="surface p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-gray-300 font-semibold text-sm">Analyse Multi-Timeframe</h3>
+        <h3 className="text-zinc-200 font-semibold text-sm">Analyse Multi-Timeframe</h3>
         {/* Compteur d'alignement */}
         <div className="flex gap-2 text-xs">
-          <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold">
-            ▲ {mtf.bull}
+          <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold inline-flex items-center gap-1.5">
+            <IconArrowUp size={14} />
+            <span>{mtf.bull}</span>
           </span>
-          <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold">
-            ▼ {mtf.bear}
+          <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold inline-flex items-center gap-1.5">
+            <IconArrowDown size={14} />
+            <span>{mtf.bear}</span>
           </span>
-          <span className="bg-gray-700 text-gray-400 px-2 py-0.5 rounded">
-            ◆ {mtf.neutral}
+          <span className="bg-gray-700 text-gray-400 px-2 py-0.5 rounded inline-flex items-center gap-1.5">
+            <IconArrowsLeftRight size={14} />
+            <span>{mtf.neutral}</span>
           </span>
         </div>
       </div>

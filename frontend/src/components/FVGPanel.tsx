@@ -10,6 +10,7 @@
  *  - FVG Baissier au-dessus du prix → zone de vente potentielle
  */
 import { useMarketStore, type FVGZone } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconBell, IconBolt, IconStar } from './Icon'
 
 const STRENGTH_CONFIG = {
   strong: { label: 'Fort',   color: 'text-white',      dot: 'bg-white'       },
@@ -37,18 +38,25 @@ function FVGRow({ fvg, currentPrice }: { fvg: FVGZone; currentPrice: number }) {
     }`}>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-bold ${color}`}>
-            {isBull ? '▲' : '▼'} FVG {isBull ? 'Haussier' : 'Baissier'}
+          <span className={`text-sm font-bold ${color} inline-flex items-center gap-1.5`}>
+            {isBull ? <IconArrowUp size={16} /> : <IconArrowDown size={16} />}
+            <span>FVG {isBull ? 'Haussier' : 'Baissier'}</span>
           </span>
           <div className={`w-1.5 h-1.5 rounded-full ${strCfg.dot}`} title={`Force : ${strCfg.label}`} />
           <span className={`text-xs ${strCfg.color}`}>{strCfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
           {insideZone && (
-            <span className="text-purple-400 text-xs font-bold animate-pulse">⚡ DANS LA ZONE</span>
+            <span className="text-purple-400 text-xs font-bold animate-pulse inline-flex items-center gap-1.5">
+              <IconBolt size={14} />
+              <span>DANS LA ZONE</span>
+            </span>
           )}
           {approaching && !insideZone && (
-            <span className="text-yellow-400 text-xs font-bold animate-pulse">🔔 Approche</span>
+            <span className="text-yellow-300 text-xs font-bold animate-pulse inline-flex items-center gap-1.5">
+              <IconBell size={14} />
+              <span>Approche</span>
+            </span>
           )}
           <span className="text-gray-500 text-xs">{distPct}% de distance</span>
         </div>
@@ -96,7 +104,7 @@ export function FVGPanel() {
   const bearFvgs = fvgs.filter(f => f.direction === 'bearish')
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+    <div className="surface p-5">
       {/* En-tête */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -106,16 +114,18 @@ export function FVGPanel() {
               SMC
             </span>
           </h3>
-          <p className="text-gray-500 text-xs mt-0.5">
+          <p className="text-zinc-500 text-xs mt-0.5">
             Zones d'imbalance — le prix tend à les combler
           </p>
         </div>
         <div className="flex gap-2 text-xs">
-          <span className="bg-green-500/15 text-green-400 px-2 py-0.5 rounded font-bold">
-            ▲ {bullFvgs.length}
+          <span className="bg-green-500/15 text-green-400 px-2 py-0.5 rounded font-bold inline-flex items-center gap-1.5">
+            <IconArrowUp size={14} />
+            <span>{bullFvgs.length}</span>
           </span>
-          <span className="bg-red-500/15 text-red-400 px-2 py-0.5 rounded font-bold">
-            ▼ {bearFvgs.length}
+          <span className="bg-red-500/15 text-red-400 px-2 py-0.5 rounded font-bold inline-flex items-center gap-1.5">
+            <IconArrowDown size={14} />
+            <span>{bearFvgs.length}</span>
           </span>
         </div>
       </div>
@@ -130,8 +140,9 @@ export function FVGPanel() {
       {/* FVG optimal pour le signal actuel */}
       {nearest && (
         <div className="mb-4 bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
-          <p className="text-purple-400 text-xs font-bold mb-2">
-            ⭐ FVG optimal pour le signal actuel
+          <p className="text-purple-400 text-xs font-bold mb-2 inline-flex items-center gap-1.5">
+            <IconStar size={14} />
+            <span>FVG optimal pour le signal actuel</span>
           </p>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
@@ -199,7 +210,7 @@ export function FVGPanel() {
         </div>
       )}
 
-      <p className="text-gray-600 text-xs mt-4 pt-3 border-t border-gray-700/50">
+      <p className="text-zinc-500 text-xs mt-4 pt-3 border-t border-white/10">
         Calculé sur les 60 dernières bougies M15 · Zones non comblées uniquement
       </p>
     </div>

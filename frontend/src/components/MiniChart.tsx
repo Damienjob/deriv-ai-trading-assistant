@@ -55,7 +55,7 @@ export function MiniChart({ height = 180, pointsCount = 100 }: Props) {
       y1: toY(f.top),
       y2: toY(f.bottom),
       color: f.direction === 'bullish' ? '#4ade80' : '#f87171',
-      label: `FVG ${f.direction === 'bullish' ? '▲' : '▼'} ${f.midpoint.toFixed(4)}`,
+      label: `FVG ${f.direction === 'bullish' ? 'bullish' : 'bearish'} ${f.midpoint.toFixed(4)}`,
       strength: f.strength,
     }))
 
@@ -64,8 +64,8 @@ export function MiniChart({ height = 180, pointsCount = 100 }: Props) {
 
   if (!chartData) {
     return (
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6 flex items-center justify-center" style={{ height }}>
-        <p className="text-gray-500 text-sm">En attente des données...</p>
+      <div className="surface p-6 flex items-center justify-center" style={{ height }}>
+        <p className="text-zinc-500 text-sm">En attente des données...</p>
       </div>
     )
   }
@@ -74,7 +74,7 @@ export function MiniChart({ height = 180, pointsCount = 100 }: Props) {
   const lineColor = isUp ? '#4ade80' : '#f87171'
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-4">
+    <div className="surface p-4">
       <div className="flex justify-between items-center mb-2 px-1">
         <div className="flex items-center gap-3">
           <span className="text-gray-400 text-xs font-medium">

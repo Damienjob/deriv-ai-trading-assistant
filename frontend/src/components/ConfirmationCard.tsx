@@ -5,6 +5,7 @@
  * Invalidation : conditions cassées tick par tick
  */
 import { useMarketStore } from '../store/marketStore'
+import { IconCheck, IconClock, IconInfo, IconShieldAlert, IconX } from './Icon'
 
 interface ConfirmationData {
   confirmed: boolean
@@ -69,7 +70,10 @@ export function ConfirmationCard() {
       {/* Invalidation — prioritaire si active */}
       {isInvalidated && (
         <div className="bg-red-500/15 border border-red-500/40 rounded-xl px-4 py-3">
-          <p className="text-red-400 font-bold text-sm mb-1">🚨 Signal Invalidé</p>
+          <p className="text-red-400 font-bold text-sm mb-1 flex items-center gap-2">
+            <IconShieldAlert size={16} />
+            Signal invalidé
+          </p>
           <p className="text-red-300 text-xs">{inv?.reason}</p>
           {inv?.invalidation_price && (
             <p className="text-red-500/70 text-xs mt-1 font-mono">
@@ -89,7 +93,17 @@ export function ConfirmationCard() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className={`font-bold text-sm ${isConfirmed ? 'text-green-400' : 'text-yellow-400'}`}>
-                {isConfirmed ? '✅ Signal confirmé' : `⏳ ${conf.consecutive_candles}/3 bougies confirmées`}
+                {isConfirmed ? (
+                  <span className="flex items-center gap-2">
+                    <IconCheck size={16} />
+                    Signal confirmé
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <IconClock size={16} />
+                    {conf.consecutive_candles}/3 bougies confirmées
+                  </span>
+                )}
               </p>
               <p className="text-gray-400 text-xs mt-0.5">
                 Confirmation sur 3 bougies M15 consécutives
@@ -116,7 +130,10 @@ export function ConfirmationCard() {
               <ul className="space-y-0.5">
                 {conf.conditions_ok.map((c, i) => (
                   <li key={i} className="text-xs text-gray-300 flex gap-1.5">
-                    <span className="text-green-500 shrink-0">✓</span>{c}
+                    <span className="text-green-500 shrink-0">
+                      <IconCheck size={14} />
+                    </span>
+                    <span>{c}</span>
                   </li>
                 ))}
               </ul>
@@ -130,7 +147,10 @@ export function ConfirmationCard() {
               <ul className="space-y-0.5">
                 {conf.conditions_failed.map((c, i) => (
                   <li key={i} className="text-xs text-gray-500 flex gap-1.5">
-                    <span className="text-red-600 shrink-0">✗</span>{c}
+                    <span className="text-red-500 shrink-0">
+                      <IconX size={14} />
+                    </span>
+                    <span>{c}</span>
                   </li>
                 ))}
               </ul>
@@ -142,8 +162,9 @@ export function ConfirmationCard() {
       {/* Surveillance active (signal non invalidé) */}
       {!isInvalidated && sig.type !== 'NEUTRAL' && (
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3">
-          <p className="text-blue-300 text-sm font-semibold mb-1">
-            👁 Surveillance active — tick par tick
+          <p className="text-blue-300 text-sm font-semibold mb-1 flex items-center gap-2">
+            <IconInfo size={16} />
+            Surveillance active — tick par tick
           </p>
           <p className="text-gray-400 text-xs leading-relaxed">
             Signal {sig.type === 'BUY' ? 'BUY' : 'SELL'} surveillé. Invalidation automatique si :

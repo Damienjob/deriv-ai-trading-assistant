@@ -4,6 +4,7 @@
  */
 
 import { useMarketStore } from '../store/marketStore'
+import { IconArrowDown, IconArrowUp, IconArrowsLeftRight } from './Icon'
 
 function IndicatorRow({
   label,
@@ -25,7 +26,13 @@ function IndicatorRow({
         <div className="flex items-center gap-2">
           {badge && (
             <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${badge}`}>
-              {badge.includes('green') ? '▲' : badge.includes('red') ? '▼' : '◆'}
+              {badge.includes('green') ? (
+                <IconArrowUp size={12} />
+              ) : badge.includes('red') ? (
+                <IconArrowDown size={12} />
+              ) : (
+                <IconArrowsLeftRight size={12} />
+              )}
             </span>
           )}
           <span className={`font-mono text-sm font-semibold ${color ?? 'text-white'}`}>
@@ -75,8 +82,8 @@ export function IndicatorsPanel() {
   })()
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5 h-full">
-      <h3 className="text-gray-300 font-semibold text-sm mb-3">
+    <div className="surface p-5 h-full">
+      <h3 className="text-zinc-200 font-semibold text-sm mb-3">
         Indicateurs techniques
       </h3>
 

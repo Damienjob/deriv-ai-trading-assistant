@@ -216,7 +216,7 @@ export function CandleChart() {
           lineWidth: 1,
           lineStyle: LineStyle.Dotted,
           axisLabelVisible: true,
-          title: `FVG ${fvg.direction === 'bullish' ? '▲' : '▼'} top`,
+          title: `FVG ${fvg.direction === 'bullish' ? 'bullish' : 'bearish'} top`,
         }))
         priceLines.current.push(serie.createPriceLine({
           price: fvg.midpoint,
@@ -224,7 +224,7 @@ export function CandleChart() {
           lineWidth: 2,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `FVG ${fvg.strength === 'strong' ? '★' : '◆'} ${fvg.midpoint.toFixed(4)}`,
+          title: `FVG ${fvg.strength === 'strong' ? 'strong' : 'mid'} ${fvg.midpoint.toFixed(4)}`,
         }))
         priceLines.current.push(serie.createPriceLine({
           price: fvg.bottom,
@@ -232,7 +232,7 @@ export function CandleChart() {
           lineWidth: 1,
           lineStyle: LineStyle.Dotted,
           axisLabelVisible: false,
-          title: `FVG ${fvg.direction === 'bullish' ? '▲' : '▼'} bottom`,
+          title: `FVG ${fvg.direction === 'bullish' ? 'bullish' : 'bearish'} bottom`,
         }))
       })
     }
@@ -284,7 +284,7 @@ export function CandleChart() {
           position: fvg.direction === 'bullish' ? 'belowBar' : 'aboveBar',
           color: fvg.direction === 'bullish' ? '#a855f7' : '#ec4899',
           shape: fvg.direction === 'bullish' ? 'arrowUp' : 'arrowDown',
-          text: `FVG${fvg.strength === 'strong' ? '★' : ''} ${fvg.midpoint.toFixed(4)}`,
+          text: `FVG${fvg.strength === 'strong' ? ' strong' : ''} ${fvg.midpoint.toFixed(4)}`,
           size: fvg.strength === 'strong' ? 2 : 1,
         })
       })
@@ -298,7 +298,7 @@ export function CandleChart() {
         position: sig.type === 'BUY' ? 'belowBar' : 'aboveBar',
         color: sig.type === 'BUY' ? '#22c55e' : '#ef4444',
         shape: sig.type === 'BUY' ? 'arrowUp' : 'arrowDown',
-        text: `${sig.type === 'BUY' ? '▲ ACHAT' : '▼ VENTE'} ${sig.confidence}%`,
+        text: `${sig.type === 'BUY' ? 'SIGNAL ACHAT' : 'SIGNAL VENTE'} ${sig.confidence}%`,
         size: 3,
       })
     }
@@ -382,9 +382,9 @@ export function CandleChart() {
 
         {/* Légende inline */}
         <div className="ml-auto flex gap-3 items-center text-xs text-zinc-500">
-          <span>▲ <span className="text-green-400">BUY</span></span>
-          <span>▼ <span className="text-red-400">SELL</span></span>
-          <span>⬩ <span className="text-purple-400">FVG</span></span>
+          <span className="text-green-400 font-semibold">BUY</span>
+          <span className="text-red-400 font-semibold">SELL</span>
+          <span className="text-purple-400 font-semibold">FVG</span>
         </div>
       </div>
 

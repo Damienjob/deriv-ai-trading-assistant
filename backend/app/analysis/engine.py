@@ -9,6 +9,7 @@ Ce module orchestre toutes les étapes dans l'ordre correct.
 
 from dataclasses import dataclass, field
 from typing import Optional
+import re
 
 from app.analysis.confirmation import (
     ConfirmationResult, InvalidationResult,
@@ -33,6 +34,25 @@ from app.analysis.strategies.scorer import ScorerResult, run_all as run_strategi
 from app.assets import get_asset
 from app.candle_store import TIMEFRAMES, candle_store
 from app.tick_store import tick_store
+
+
+_EMOJI_RE = re.compile(r'[\U0001F300-\U0001FAFF\U00002300-\U000023FF\U00002600-\U000026FF\U00002700-\U000027BF\U00002B00-\U00002BFF\u200d\uFE0F]')
+
+
+def _strip_emojis(text: str) -> str:
+    cleaned = _EMOJI_RE.sub('', text)
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
+    return cleaned
+
+
+def _sanitize_payload(obj):
+    if isinstance(obj, str):
+        return _strip_emojis(obj)
+    if isinstance(obj, list):
+        return [_sanitize_payload(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: _sanitize_payload(v) for k, v in obj.items()}
+    return obj
 
 
 # ─────────────────────────────────────────────
@@ -164,7 +184,7 @@ class MTFResult:
     nearest_fvg_entry: Optional[FVG] = None                # FVG optimal pour entrée
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "price": self.price,
             "timestamp": self.timestamp,
             "symbol": self.symbol,
@@ -200,6 +220,7 @@ class MTFResult:
             "fvgs": [f.to_dict() for f in self.fvgs],
             "nearest_fvg_entry": self.nearest_fvg_entry.to_dict() if self.nearest_fvg_entry else None,
         }
+        return _sanitize_payload(payload)
 
 
 # ─────────────────────────────────────────────

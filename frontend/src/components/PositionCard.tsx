@@ -2,7 +2,7 @@
  * Carte de position — TP, SL, lots, durée, répétitions, sortie.
  */
 import { useMarketStore } from '../store/marketStore'
-import { IconArrowDown, IconArrowUp, IconClock } from './Icon'
+import { IconArrowDown, IconArrowUp, IconClock, IconInfo, IconRefresh } from './Icon'
 
 function Row({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
@@ -85,13 +85,19 @@ export function PositionCard() {
 
       {/* Répétitions */}
       <div className="bg-gray-700/40 rounded-lg px-3 py-2 mb-3">
-        <p className="text-gray-400 text-xs font-semibold mb-0.5">🔄 Répétitions</p>
+        <p className="text-gray-400 text-xs font-semibold mb-0.5 inline-flex items-center gap-1.5">
+          <IconRefresh size={14} />
+          <span>Répétitions</span>
+        </p>
         <p className="text-gray-300 text-xs">{pos.repeat.advice}</p>
       </div>
 
       {/* Message de sortie */}
       <div className="bg-gray-900/60 border border-gray-600 rounded-lg px-3 py-2 mb-3">
-        <p className="text-gray-400 text-xs font-semibold mb-1">📋 Quand sortir ?</p>
+        <p className="text-gray-400 text-xs font-semibold mb-1 inline-flex items-center gap-1.5">
+          <IconInfo size={14} />
+          <span>Quand sortir ?</span>
+        </p>
         <p className="text-gray-200 text-xs leading-relaxed">{pos.exit_message}</p>
       </div>
 

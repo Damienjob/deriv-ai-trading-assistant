@@ -9,7 +9,7 @@
  */
 import { useState } from 'react'
 import { useMarketStore } from '../store/marketStore'
-import { IconArrowDown, IconArrowUp, IconChevronDown, IconChevronUp, IconInfo, IconPlus, IconShieldAlert, IconX } from './Icon'
+import { IconArrowDown, IconArrowUp, IconBarChart, IconChevronDown, IconChevronUp, IconInfo, IconPlus, IconShieldAlert, IconX } from './Icon'
 import {
   usePositionTracker,
   type OpenPosition,
@@ -509,7 +509,10 @@ export function PositionTracker() {
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
           <h3 className="text-gray-200 font-bold text-sm">
-            📊 Suivi de Positions
+            <span className="inline-flex items-center gap-1.5">
+              <IconBarChart size={16} />
+              <span>Suivi de Positions</span>
+            </span>
           </h3>
           {activePositions.length > 0 && (
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${

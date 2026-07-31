@@ -213,3 +213,13 @@ export function IconStar(props: Props) {
     </svg>
   )
 }
+
+export function IconBarChart(props: Props) {
+  return (
+    <svg {...s(props)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 20V14" />
+      <path d="M12 20V4" />
+      <path d="M18 20V10" />
+    </svg>
+  )
+}

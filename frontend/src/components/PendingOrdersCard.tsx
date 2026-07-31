@@ -1,114 +1,132 @@
 /**
- * Carte "Ordres en attente" — prix cibles avec ≥70% confiance.
- * Affiché quand le signal actuel est incertain ou < 70%.
+ * Carte "Ordres en attente" — style maquette premium.
  */
 import { useMarketStore, type PendingOrder } from '../store/marketStore'
 import { IconArrowDown, IconArrowUp, IconBell, IconCheck, IconClock, IconPin } from './Icon'
 
-const DIR_CONFIG = {
-  BUY:  { color: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
-  SELL: { color: 'text-red-300',     bg: 'bg-red-500/10',     border: 'border-red-500/25' },
-}
-
-function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 80 ? 'bg-green-500' : value >= 70 ? 'bg-yellow-500' : 'bg-gray-600'
+function ConfidenceBar({ value, label }: { value: number; label: string }) {
+  const color = value >= 85 ? '#4edea3' : value >= 70 ? '#fbbf24' : '#6b7280'
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-700 rounded-full h-1.5">
-        <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${value}%` }} />
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold tracking-[0.12em] uppercase" style={{ color: '#3c4a42' }}>
+          {label}
+        </p>
+        <span className="font-mono font-bold text-sm" style={{ color }}>{value}%</span>
       </div>
-      <span className={`text-xs font-bold ${value >= 70 ? 'text-white' : 'text-gray-500'}`}>
-        {value}%
-      </span>
+      <div className="rounded-full overflow-hidden" style={{ height: 5, background: 'rgba(255,255,255,0.07)' }}>
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}, ${color}66)`, transition: 'width 0.6s ease' }}
+        />
+      </div>
     </div>
   )
 }
 
-function OrderRow({ order }: { order: PendingOrder }) {
-  const dir = DIR_CONFIG[order.direction as keyof typeof DIR_CONFIG] ?? DIR_CONFIG.BUY
-  const iconColor =
-    order.level_type === 'support' ? 'text-emerald-300' :
-    order.level_type === 'resistance' ? 'text-red-300' :
-    'text-zinc-300'
+function OrderCard({ order }: { order: PendingOrder }) {
+  const isBuy      = order.direction === 'BUY'
+  const dirColor   = isBuy ? '#4edea3' : '#f87171'
+  const dirBg      = isBuy ? 'rgba(78,222,163,0.15)'  : 'rgba(239,68,68,0.15)'
+  const dirBorder  = isBuy ? 'rgba(78,222,163,0.35)'  : 'rgba(239,68,68,0.35)'
+  const cardBorder = order.proximity_alert ? 'rgba(251,191,36,0.35)' : 'rgba(255,255,255,0.08)'
 
   return (
-    <div className={`rounded-xl border p-4 ${
-      order.proximity_alert
-        ? 'border-yellow-500/50 bg-yellow-500/5 ring-1 ring-yellow-500/20'
-        : `${dir.border} ${dir.bg}`
-    }`}>
+    <div className="rounded-2xl p-5 space-y-4" style={{ background: '#161b22', border: `1px solid ${cardBorder}` }}>
 
-      {/* En-tête */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className={iconColor}>
-            <IconPin size={16} />
-          </span>
-          <span className="text-white text-sm font-semibold">{order.level_label}</span>
-          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${dir.bg} ${dir.color} border ${dir.border}`}>
-            <span className="inline-flex items-center gap-1.5">
-              {order.direction === 'BUY'
-                ? <IconArrowUp size={14} />
-                : <IconArrowDown size={14} />}
-              <span>{order.direction}</span>
-            </span>
+      {/* ── Row 1 : header ── */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span style={{ color: dirColor }}><IconPin size={15} /></span>
+          <span className="text-zinc-100 font-bold text-sm">{order.level_label}</span>
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-black"
+            style={{ background: dirBg, color: dirColor, border: `1px solid ${dirBorder}` }}
+          >
+            {isBuy ? <IconArrowUp size={11} /> : <IconArrowDown size={11} />}
+            {order.direction}
           </span>
         </div>
-        {order.proximity_alert && (
-          <span className="text-yellow-300 text-xs font-bold animate-pulse flex items-center gap-1.5">
-            <IconBell size={14} />
+        {order.proximity_alert ? (
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold animate-pulse"
+            style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+          >
+            <IconBell size={12} />
             Proche
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px]" style={{ color: '#3c4a42', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <IconBell size={12} />
+            En attente
           </span>
         )}
       </div>
 
-      {/* Prix cible */}
-      <div className="flex items-end gap-3 mb-2">
+      {/* ── Row 2 : prix + distance | barre confiance ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+        {/* Gauche */}
         <div>
-          <p className="text-green-400 text-xs mb-1">Prix cible</p>
-          <p className={`text-2xl font-mono font-bold ${dir.color}`}>
+          <p className="text-[10px] font-bold tracking-[0.12em] uppercase mb-1" style={{ color: '#3c4a42' }}>Prix cible</p>
+          <p className="font-mono font-black leading-none mb-3" style={{ fontSize: 'clamp(22px,5vw,32px)', color: dirColor }}>
             {order.target_price.toFixed(4)}
           </p>
-        </div>
-        <div className="mb-1">
-          <p className="text-gray-500 text-xs">Distance</p>
-          <p className="text-gray-300 text-sm font-mono">
-            <span className="inline-flex items-center gap-1">
-              {order.direction === 'BUY' ? <IconArrowDown size={14} /> : <IconArrowUp size={14} />}
-              <span>{order.distance_pct.toFixed(3)}%</span>
+          <p className="text-[10px] font-bold tracking-[0.12em] uppercase mb-0.5" style={{ color: '#3c4a42' }}>Distance</p>
+          <p className="font-mono text-sm text-zinc-300 flex items-center gap-1.5 flex-wrap">
+            <span style={{ color: dirColor }}>
+              {isBuy ? <IconArrowDown size={13} /> : <IconArrowUp size={13} />}
             </span>
-            <span className="text-gray-500 ml-1">({order.distance_abs.toFixed(4)})</span>
+            <span className="font-semibold" style={{ color: dirColor }}>{order.distance_pct.toFixed(3)}%</span>
+            <span className="text-zinc-600">({order.distance_abs.toFixed(4)})</span>
           </p>
         </div>
+        {/* Droite : barre confiance */}
+        <div className="pt-1">
+          <ConfidenceBar
+            value={order.estimated_confidence}
+            label={order.proximity_alert ? 'CONFIANCE ESTIMÉE À CE NIVEAU' : 'CONFIANCE ESTIMÉE'}
+          />
+        </div>
       </div>
 
-      {/* Barre de confiance */}
-      <div className="mb-3">
-        <p className="text-gray-400 text-xs mb-1">Confiance estimée à ce niveau</p>
-        <ConfidenceBar value={order.estimated_confidence} />
-      </div>
+      {/* ── Row 3 : conditions | rationale ── */}
+      {(order.conditions_at_target.length > 0 || order.rationale) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/[0.05]">
 
-      {/* Conditions remplies */}
-      {order.conditions_at_target.length > 0 && (
-        <div className="mb-3">
-          <p className="text-gray-500 text-xs font-semibold mb-1">Conditions à ce niveau :</p>
-          <ul className="space-y-0.5">
-            {order.conditions_at_target.map((c, i) => (
-              <li key={i} className={`text-xs flex gap-1.5 ${dir.color}`}>
-                <span className="shrink-0">
-                  <IconCheck size={14} />
-                </span>
-                <span className="text-gray-300">{c}</span>
-              </li>
-            ))}
-          </ul>
+          {/* Conditions */}
+          {order.conditions_at_target.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.12em] uppercase mb-2" style={{ color: '#3c4a42' }}>
+                Conditions à ce niveau :
+              </p>
+              <ul className="space-y-1.5">
+                {order.conditions_at_target.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="shrink-0 mt-0.5" style={{ color: dirColor }}><IconCheck size={13} /></span>
+                    <span className="text-zinc-300 text-xs leading-snug">{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Rationale */}
+          {order.rationale && (
+            <div
+              className="rounded-xl px-4 py-3 flex items-start gap-2"
+              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <span className="text-zinc-600 shrink-0 mt-0.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </span>
+              <p className="text-zinc-400 text-xs leading-relaxed italic">{order.rationale}</p>
+            </div>
+          )}
+
         </div>
       )}
-
-      {/* Explication */}
-      <p className="text-gray-400 text-xs leading-relaxed bg-gray-900/40 rounded-lg px-3 py-2">
-        {order.rationale}
-      </p>
     </div>
   )
 }
@@ -118,62 +136,68 @@ export function PendingOrdersCard() {
   const orders = analysis?.pending_orders ?? []
   const signal = analysis?.signal
 
-  // Afficher uniquement si signal incertain
-  const shouldShow = (
-    !signal ||
-    signal.type === 'NEUTRAL' ||
-    signal.type === 'WAIT' ||
-    signal.confidence < 70
-  )
+  const shouldShow = !signal || signal.type === 'NEUTRAL' || signal.type === 'WAIT' || signal.confidence < 70
+  if (!shouldShow) return null
 
-  if (!shouldShow || orders.length === 0) {
-    if (!shouldShow) return null  // signal fort → pas besoin d'ordres en attente
+  const hasProximity = orders.some(o => o.proximity_alert)
+
+  if (orders.length === 0) {
     return (
-      <div className="surface p-5">
-        <h3 className="text-zinc-200 font-semibold text-sm mb-2 flex items-center gap-2">
-          <IconClock size={16} />
-          Ordres en attente
-        </h3>
-        <p className="text-zinc-500 text-sm text-center py-4">
-          Calcul des niveaux optimaux en cours...
-        </p>
+      <div className="surface-solid px-5 py-4 flex items-center gap-3 text-zinc-500">
+        <IconClock size={15} />
+        <p className="text-sm">Calcul des niveaux optimaux en cours...</p>
       </div>
     )
   }
 
-  const hasProximity = orders.some(o => o.proximity_alert)
-
   return (
-    <div className="surface p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div className="surface-solid overflow-hidden">
+
+      {/* ── Header ── */}
+      <div className="px-5 pt-5 pb-4 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h3 className="text-white font-semibold text-sm">
+          <h3 className="text-white font-bold text-base sm:text-lg leading-tight">
             Attendre — Prix cibles recommandés
           </h3>
-          <p className="text-zinc-400 text-xs mt-0.5">
-            Signal actuel &lt; 70% — entrez seulement à ces niveaux
+          <p className="text-zinc-500 text-xs mt-1 flex items-center gap-1.5 flex-wrap">
+            <span style={{ color: '#4edea3' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+              </svg>
+            </span>
+            Signal actuel &lt;&nbsp;
+            <span className="text-amber-400 font-bold">70%</span>
+            &nbsp;— entrez seulement à ces niveaux de précision.
           </p>
         </div>
         {hasProximity && (
-          <span className="text-yellow-300 text-xs font-bold bg-yellow-500/10 border border-yellow-500/30 px-2.5 py-1 rounded-full animate-pulse">
-            <span className="inline-flex items-center gap-1.5">
-              <IconBell size={14} />
-              Niveau proche
-            </span>
+          <span
+            className="self-start sm:shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold animate-pulse"
+            style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+          >
+            <IconBell size={13} />
+            Niveau proche détecté
           </span>
         )}
       </div>
 
-      <div className="space-y-3">
+      {/* ── Cards ── */}
+      <div className="p-5 space-y-4">
         {orders.map((order, i) => (
-          <OrderRow key={i} order={order} />
+          <OrderCard key={i} order={order} />
         ))}
       </div>
 
-      <p className="text-zinc-500 text-xs mt-4 pt-3 border-t border-white/10">
-        Ces niveaux sont calculés à partir des supports, résistances, Fibonacci et Bollinger Bands.
-        L'alerte s'active quand le prix est à moins de 0.3% du niveau.
-      </p>
+      {/* ── Footer ── */}
+      <div className="px-5 py-3 border-t border-white/[0.06] text-center">
+        <p className="text-zinc-500 text-[12px]">
+          Ces niveaux sont calculés à partir des supports, résistances, Fibonacci et Bollinger Bands.
+          L'alerte s'active quand le prix est à moins de{' '}
+          <span className="text-emerald-400 font-bold">0.3%</span>{' '}
+          du niveau cible.
+        </p>
+      </div>
+
     </div>
   )
 }

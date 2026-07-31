@@ -118,12 +118,12 @@ function NewPositionForm({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
       {/* ── Panneau gauche : formulaire ── */}
-      <div className="lg:col-span-2 surface-solid p-5">
+      <div className="lg:col-span-2 surface-solid p-4 sm:p-5">
         {/* Titre + BUY/SELL toggle */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-2 text-emerald-400">
             <span className="w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[10px] font-black">+</span>
-            <span className="section-label text-emerald-500 text-[11px]">SUIVI De POSITIONS</span>
+            <span className="section-label text-emerald-500 text-[11px]">NOUVELLE POSITION</span>
           </div>
           <div className="flex rounded-lg overflow-hidden border border-white/[0.08]">
             <button
@@ -148,7 +148,7 @@ function NewPositionForm({
         </div>
 
         {/* Inputs row */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div>
             <p className="section-label mb-1.5">Volume (lot)</p>
             <input

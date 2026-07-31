@@ -24,13 +24,13 @@ export default function App() {
 
   if (!isReady) return <AppLoader />
 
-  const isHome       = view === 'home'
+  const isHome        = view === 'home'
   const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false
 
   return (
     <div className="app-bg min-h-screen">
 
-      {/* Sidebar : uniquement sur les vues internes */}
+      {/* ── Sidebar — visible uniquement sur les vues internes ── */}
       {!isHome && (
         <Sidebar
           active={view}
@@ -40,40 +40,48 @@ export default function App() {
         />
       )}
 
-      {/* Zone principale — décalée du sidebar seulement hors home */}
+      {/* ── Zone principale ── */}
       <div className={`flex flex-col min-h-screen ${!isHome ? 'lg:pl-60' : ''}`}>
 
-        {/* ── Header ── */}
-        {isHome ? (
-          /* ── Header page d'accueil : logo + nav + CTA ── */
+        {/* ── Header accueil ── */}
+        {isHome && (
           <header
             className="fixed top-0 w-full z-50 border-b backdrop-blur-xl"
             style={{ background: 'rgba(10,10,10,0.85)', borderColor: 'rgba(60,74,66,0.3)' }}
           >
-            <div className="flex justify-between items-center h-20 px-8 max-w-7xl mx-auto">
+            <div className="flex justify-between items-center h-20 px-4 sm:px-8 max-w-7xl mx-auto gap-4">
+
               {/* Logo */}
               <button
                 onClick={() => setView('home')}
-                className="font-bold text-xl tracking-tight"
-                style={{ color: '#e5e2e1', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                className="flex items-center gap-3 group shrink-0"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                aria-label="Accueil"
               >
-                Deriv AI
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg,#4edea3,#059669)', boxShadow: '0 0 16px rgba(78,222,163,0.28)', color: '#003824' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 20V14" /><path d="M12 20V4" /><path d="M18 20V10" />
+                  </svg>
+                </div>
+                <div className="hidden sm:block leading-tight text-left">
+                  <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1', fontFamily: 'Inter, sans-serif' }}>Deriv AI</p>
+                  <p className="text-[12px] mt-0.5 leading-none" style={{ color: '#bbcabf', fontFamily: 'Inter, sans-serif' }}>Trading Assistant</p>
+                </div>
               </button>
 
               {/* Nav centre */}
               <nav className="hidden md:flex gap-8 items-center">
-                {[
+                {([
                   { key: 'dashboard' as AppView, label: 'Dashboard' },
                   { key: 'analysis'  as AppView, label: 'Analysis'  },
-                ].map(({ key, label }) => (
+                ] as { key: AppView; label: string }[]).map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => setView(key)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      fontFamily: 'Inter, sans-serif', fontSize: 16,
-                      color: '#bbcabf', transition: 'color 0.2s',
-                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 16, color: '#bbcabf', transition: 'color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#e5e2e1')}
                     onMouseLeave={e => (e.currentTarget.style.color = '#bbcabf')}
                   >
@@ -93,24 +101,23 @@ export default function App() {
               {/* CTA */}
               <button
                 onClick={() => setView('dashboard')}
-                style={{
-                  background: '#4edea3', color: '#003824', padding: '10px 24px',
-                  borderRadius: 8, fontWeight: 700, fontSize: 15,
-                  boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none',
-                  cursor: 'pointer', transition: 'all 0.3s',
-                  fontFamily: 'Inter, sans-serif',
-                }}
+                className="shrink-0"
+                style={{ background: '#4edea3', color: '#003824', padding: '10px 20px', borderRadius: 8, fontWeight: 700, fontSize: 14, boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(78,222,163,0.5)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
               >
                 Ouvrir le Dashboard
               </button>
             </div>
           </header>
-        ) : (
-          /* ── Header vues internes : burger + symbole + notifs ── */
+        )}
+
+        {/* ── Header vues internes ── */}
+        {!isHome && (
           <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur-xl">
             <div className="px-4 sm:px-6 h-14 flex items-center gap-4">
+
+              {/* Burger mobile */}
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors shrink-0"
@@ -119,8 +126,9 @@ export default function App() {
                 <IconMenu size={17} />
               </button>
 
+              {/* Symbol pill */}
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#4edea3' }} />
                 <span className="text-[12px] font-mono font-semibold text-zinc-300">{currentSymbol}</span>
                 <span className="text-zinc-600 text-[11px] mx-0.5">·</span>
                 <span className="text-[11px] text-zinc-500 font-mono">M1 M5 M15 H1</span>
@@ -143,7 +151,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Contenu principal ── */}
+        {/* ── Contenu ── */}
         <main className={`flex-1 w-full ${isHome ? 'pt-20' : 'px-4 sm:px-6 py-6 max-w-7xl mx-auto'}`}>
           {view === 'home'      && <HomeView onNavigate={setView} />}
           {view === 'dashboard' && <DashboardView />}
@@ -151,7 +159,7 @@ export default function App() {
           {view === 'positions' && <PositionsView />}
         </main>
 
-        {/* Footer — uniquement sur les vues internes */}
+        {/* ── Footer vues internes ── */}
         {!isHome && (
           <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-3 flex items-center justify-between mt-auto">
             <p className="text-[11px] text-zinc-600">© 2026 Deriv AI Trading Assistant</p>

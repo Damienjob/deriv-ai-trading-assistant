@@ -160,7 +160,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
         <LiveTicker />
 
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="max-w-7xl mx-auto px-8 pt-24 pb-16 grid lg:grid-cols-2 gap-16 items-center">
+        <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-16 sm:pt-24 pb-12 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="space-y-8">
             {/* Badge */}
             <div
@@ -218,8 +218,8 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
             </div>
           </div>
 
-          {/* Hero image */}
-          <div className="relative group">
+          {/* Hero image — caché sur mobile */}
+          <div className="relative group hidden lg:block">
             <div
               className="hero-glow absolute -inset-4 rounded-[2rem] blur-3xl opacity-20 group-hover:opacity-40 transition-opacity"
               style={{ background: 'rgba(78,222,163,0.2)' }}
@@ -235,23 +235,24 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
         </section>
 
         {/* ── Decision Flow ───────────────────────────────────────────────────── */}
-        <section id="flow" className="max-w-7xl mx-auto px-8 py-24 space-y-16">
+        <section id="flow" className="max-w-7xl mx-auto px-4 sm:px-8 py-16 sm:py-24 space-y-12 sm:space-y-16">
           <div className="text-center space-y-4">
-            <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
               Le Flux de Décision en 6 Étapes
             </h2>
             <p style={{ color: '#bbcabf', fontSize: 16 }}>Comment l'IA valide chaque opportunité avant de la présenter.</p>
           </div>
 
-          <div className="relative py-12 overflow-x-auto">
-            {/* Timeline line desktop */}
+          {/* Desktop : timeline horizontale / Mobile : grille 2 colonnes */}
+          <div className="relative">
+            {/* Ligne timeline desktop seulement */}
             <div
               className="absolute hidden md:block h-[2px] opacity-30"
               style={{ top: 48, left: 0, right: 0, background: 'linear-gradient(90deg, #3c4a42 0%, #4edea3 100%)' }}
             />
-            <div className="flex justify-between gap-8 min-w-[900px] relative">
+            <div className="grid grid-cols-2 md:flex md:justify-between gap-6 md:gap-8 py-6 md:py-12">
               {STEPS.map((step, i) => (
-                <div key={step.n} className="flex flex-col items-center text-center space-y-6 flex-1">
+                <div key={step.n} className="flex flex-col items-center text-center space-y-4 md:space-y-6 flex-1">
                   <div
                     className="w-12 h-12 rounded-full glass-card flex items-center justify-center relative z-10 text-[22px]"
                     style={{
@@ -264,8 +265,8 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
                     <MatIcon name={step.icon} />
                   </div>
                   <div className="space-y-1">
-                    <h3 style={{ fontWeight: 700, color: '#e5e2e1', fontSize: 14 }}>{step.n}. {step.title}</h3>
-                    <p style={{ color: '#bbcabf', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>{step.desc}</p>
+                    <h3 style={{ fontWeight: 700, color: '#e5e2e1', fontSize: 13 }}>{step.n}. {step.title}</h3>
+                    <p style={{ color: '#bbcabf', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}>{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -274,7 +275,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
         </section>
 
         {/* ── Arsenal ─────────────────────────────────────────────────────────── */}
-        <section className="max-w-7xl mx-auto px-8 py-16 space-y-16">
+        <section className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-10 sm:space-y-16">
           <div className="text-center space-y-4">
             <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
               Arsenal de Précision
@@ -313,7 +314,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
         </section>
 
         {/* ── Pricing ─────────────────────────────────────────────────────────── */}
-        <section className="max-w-7xl mx-auto px-8 py-24 space-y-16">
+        <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-8 py-24 space-y-16">
           <div className="text-center space-y-4">
             <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
               Activez votre Copilote
@@ -321,23 +322,26 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
             <p style={{ color: '#bbcabf', fontSize: 16 }}>Choisissez le niveau d'assistance qui vous convient.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto">
-            {/* Free */}
-            <GlassCard className="p-8 rounded-3xl space-y-8">
+          {/* Grid : Pro centré et plus grand, Free et Institutional plus petits */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-center max-w-5xl mx-auto mt-8">
+
+            {/* Free — disabled */}
+            <GlassCard className="p-8 rounded-3xl space-y-8 opacity-60">
               <div className="text-center space-y-2">
                 <span style={{ color: '#bbcabf', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 500 }}>EXPLORATEUR</span>
-                <h3 style={{ fontSize: 40, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>GRATUIT</h3>
+                <h3 style={{ fontSize: 36, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>GRATUIT</h3>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {['Dashboard live', 'Flux de décision', 'Alertes avancées'].map(f => (
-                  <li key={f} className="flex items-center gap-3" style={{ color: '#bbcabf', fontSize: 16 }}>
+                  <li key={f} className="flex items-center gap-3" style={{ color: '#bbcabf', fontSize: 15 }}>
                     <MatIcon name="check_circle" className="text-sm" style={{ color: '#4edea3' } as React.CSSProperties} />
                     {f}
                   </li>
                 ))}
               </ul>
               <button
-                style={{ width: '100%', padding: '16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#e5e2e1', fontWeight: 700, fontSize: 16, cursor: 'pointer', transition: 'all 0.3s' }}
+                onClick={() => onNavigate('dashboard')}
+                style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#e5e2e1', fontWeight: 700, fontSize: 15, cursor: 'pointer', transition: 'all 0.3s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
@@ -345,20 +349,25 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
               </button>
             </GlassCard>
 
-            {/* Pro — highlighted */}
+            {/* Pro — highlighted, plus grand */}
             <GlassCard
-              className="p-8 rounded-3xl space-y-8 relative"
-              style={{ border: '1px solid rgba(78,222,163,0.5)', transform: 'scale(1.05)', boxShadow: '0 0 40px rgba(16,185,129,0.1)' }}
+              className="p-8 rounded-3xl space-y-8 relative md:scale-[1.06]"
+              style={{
+                border: '1px solid rgba(78,222,163,0.5)',
+                boxShadow: '0 0 60px rgba(16,185,129,0.15)',
+                zIndex: 1,
+              }}
             >
+              {/* Badge Populaire */}
               <div
-                className="absolute left-1/2 -translate-x-1/2 px-6 py-1 rounded-full font-bold"
-                style={{ top: -16, background: '#4edea3', color: '#003824', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                className="absolute left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full font-bold text-center"
+                style={{ top: -18, background: '#4edea3', color: '#003824', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}
               >
                 Populaire
               </div>
               <div className="text-center space-y-2">
                 <span style={{ color: '#bbcabf', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 500 }}>PRO</span>
-                <h3 style={{ fontSize: 40, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>
+                <h3 style={{ fontSize: 42, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>
                   5€<span style={{ fontSize: 16, fontWeight: 400, color: '#bbcabf' }}>/mois</span>
                 </h3>
                 <p style={{ color: '#4edea3', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>Temps réel + validations complètes</p>
@@ -372,44 +381,42 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
                 ))}
               </ul>
               <button
-                onClick={() => onNavigate('dashboard')}
-                style={{ width: '100%', padding: '16px', borderRadius: 12, background: '#4edea3', color: '#003824', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none', transition: 'all 0.3s' }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 30px rgba(78,222,163,0.5)' }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
+                disabled
+                style={{ width: '100%', padding: '16px', borderRadius: 12, background: 'rgba(78,222,163,0.2)', color: '#6b7280', fontWeight: 700, fontSize: 16, cursor: 'not-allowed', border: 'none' }}
               >
                 Get Signals Now
               </button>
             </GlassCard>
 
-            {/* Institutional */}
-            <GlassCard className="p-8 rounded-3xl space-y-8">
+            {/* Institutional — disabled */}
+            <GlassCard className="p-8 rounded-3xl space-y-8 opacity-60">
               <div className="text-center space-y-2">
                 <span style={{ color: '#bbcabf', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 500 }}>INSTITUTIONNEL</span>
-                <h3 style={{ fontSize: 40, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>
+                <h3 style={{ fontSize: 36, fontWeight: 700, color: '#e5e2e1', letterSpacing: '-0.02em' }}>
                   51€<span style={{ fontSize: 16, fontWeight: 400, color: '#bbcabf' }}>/an</span>
                 </h3>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {['Tout le pack Pro', 'Accès illimité', 'API Access'].map(f => (
-                  <li key={f} className="flex items-center gap-3" style={{ color: '#bbcabf', fontSize: 16 }}>
+                  <li key={f} className="flex items-center gap-3" style={{ color: '#bbcabf', fontSize: 15 }}>
                     <MatIcon name="check_circle" className="text-sm" style={{ color: '#4edea3' } as React.CSSProperties} />
                     {f}
                   </li>
                 ))}
               </ul>
               <button
-                style={{ width: '100%', padding: '16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#e5e2e1', fontWeight: 700, fontSize: 16, cursor: 'pointer', transition: 'all 0.3s' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                disabled
+                style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#6b7280', fontWeight: 700, fontSize: 15, cursor: 'not-allowed' }}
               >
                 Accès annuel
               </button>
             </GlassCard>
+
           </div>
         </section>
 
         {/* ── CTA Final ───────────────────────────────────────────────────────── */}
-        <section className="max-w-3xl mx-auto px-8 py-24 text-center space-y-12">
+        <section className="max-w-3xl mx-auto px-4 sm:px-8 py-16 sm:py-24 text-center space-y-8 sm:space-y-12">
           <div className="space-y-4">
             <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
               Recevez vos premiers signaux aujourd'hui

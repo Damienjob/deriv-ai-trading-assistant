@@ -20,21 +20,33 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
 
-      {/* ── Logo ── */}
+      {/* ── Logo cliquable → accueil ── */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[11px] tracking-widest shrink-0"
-            style={{ background: 'linear-gradient(135deg,#4edea3,#059669)', color: '#003824', boxShadow: '0 0 16px rgba(78,222,163,0.25)' }}>
-            <IconBarChart size={16} />
+        <button
+          onClick={() => { onNavigate('home'); onClose?.() }}
+          className="flex items-center gap-3 group"
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+          aria-label="Accueil"
+        >
+          {/* Icône verte grande comme la capture */}
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:scale-105"
+            style={{
+              background: 'linear-gradient(135deg, #4edea3 0%, #059669 100%)',
+              boxShadow: '0 0 20px rgba(78,222,163,0.3)',
+              color: '#003824',
+            }}
+          >
+            <IconBarChart size={20} />
           </div>
-          <div className="leading-tight">
-            <p className="text-white font-bold text-sm leading-none">Deriv AI</p>
-            <p className="text-zinc-500 text-[11px] mt-0.5 leading-none">Trading Assistant</p>
+          <div className="leading-tight text-left">
+            <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1' }}>Deriv AI</p>
+            <p className="text-[12px] mt-0.5 leading-none" style={{ color: '#bbcabf' }}>Trading Assistant</p>
           </div>
-        </div>
+        </button>
         {onClose && (
           <button onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors ml-2"
             aria-label="Fermer">
             <IconX size={16} />
           </button>

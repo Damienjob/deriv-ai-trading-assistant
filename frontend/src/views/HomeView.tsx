@@ -226,7 +226,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
             <div className="mb-8">
               <div className="text-cyan-200 font-black mb-2">PRO</div>
               <div className="text-4xl font-black text-white">
-                49€<span className="text-lg text-zinc-500">/mois</span>
+                5€<span className="text-lg text-zinc-500">/mois</span>
               </div>
               <div className="text-sm text-zinc-500">Temps réel + validations complètes</div>
             </div>
@@ -244,7 +244,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
             <div className="mb-8">
               <div className="text-zinc-400 font-bold mb-2">INSTITUTIONNEL</div>
               <div className="text-4xl font-black text-white">
-                199€<span className="text-lg text-zinc-500">/an</span>
+                51€<span className="text-lg text-zinc-500">/an</span>
               </div>
               <div className="text-sm text-zinc-500">Accès premium</div>
             </div>

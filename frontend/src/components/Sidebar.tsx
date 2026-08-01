@@ -1,6 +1,6 @@
 import { IconBarChart, IconBolt, IconInfo, IconX } from './Icon'
-
-export type AppView = 'home' | 'dashboard' | 'analysis' | 'positions'
+import type { AppView } from '../store/marketStore'
+export type { AppView }
 
 const NAV: Array<{ key: AppView; label: string; Icon: (props: any) => any; badge?: string }> = [
   { key: 'dashboard', label: 'Dashboard', Icon: IconBolt,     badge: 'Live' },

@@ -18,11 +18,20 @@ import { PositionsView } from './views/PositionsView'
 export default function App() {
   useWebSocket()
   useNotifications()
-  const { isReady, currentSymbol, analysis } = useMarketStore()
-  const [view, setView]               = useState<AppView>('home')
+  const { isReady, currentSymbol, analysis, currentView, setCurrentView } = useMarketStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  if (!isReady) return <AppLoader />
+  const view    = currentView
+  const setView = setCurrentView
+
+  const isHome        = view === 'home'
+  const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false
+
+  return (
+    <div className="app-bg min-h-screen">
+
+      {/* AppLoader par-dessus sans démonter l'app — évite le reset de la vue */}
+      {!isReady && <div className="fixed inset-0 z-[9999]"><AppLoader /></div>}
 
   const isHome        = view === 'home'
   const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false

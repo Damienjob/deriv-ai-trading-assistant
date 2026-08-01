@@ -158,17 +158,19 @@ export interface OHLCCandle {
 
 export type Timeframe = '1min' | '5min' | '15min' | '30min' | '1h'
 
+export type AppView = 'home' | 'dashboard' | 'analysis' | 'positions'
+
 interface MarketState {
   currentTick: Tick | null
   ticks: Tick[]
   analysis: Analysis | null
   isConnected: boolean
-  isReady: boolean          // true quand bougies + premier tick reçus
-  candlesLoaded: boolean    // true quand le snapshot a été reçu
+  isReady: boolean
+  candlesLoaded: boolean
   error: string | null
   baseAmount: number
   currentSymbol: string
-  // Bougies OHLC par timeframe
+  currentView: AppView
   candles: Record<Timeframe, OHLCCandle[]>
   activeTimeframe: Timeframe
 
@@ -177,6 +179,7 @@ interface MarketState {
   setError: (e: string | null) => void
   setBaseAmount: (v: number) => void
   setCurrentSymbol: (s: string) => void
+  setCurrentView: (v: AppView) => void
   setCandlesSnapshot: (data: Record<string, OHLCCandle[]>) => void
   updateCandle: (timeframe: Timeframe, candle: OHLCCandle) => void
   setActiveTimeframe: (tf: Timeframe) => void
@@ -194,6 +197,7 @@ export const useMarketStore = create<MarketState>()(
       error: null,
       baseAmount: 100,
       currentSymbol: '1HZ50V',
+      currentView: 'home' as AppView,
       candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
       activeTimeframe: '5min',
 
@@ -214,6 +218,7 @@ export const useMarketStore = create<MarketState>()(
   setConnected: (v) => set({ isConnected: v }),
   setError: (e) => set({ error: e }),
   setBaseAmount: (v) => set({ baseAmount: v }),
+  setCurrentView: (v) => set({ currentView: v }),
   setCurrentSymbol: (s) => set({
     currentSymbol: s,
     ticks: [],
@@ -271,6 +276,7 @@ export const useMarketStore = create<MarketState>()(
         currentSymbol:   state.currentSymbol,
         baseAmount:      state.baseAmount,
         activeTimeframe: state.activeTimeframe,
+        currentView:     state.currentView,
       }),
     }
   )

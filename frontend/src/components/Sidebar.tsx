@@ -40,8 +40,7 @@ function SidebarContent({
             <IconBarChart size={20} />
           </div>
           <div className="leading-tight text-left">
-            <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1' }}>Deriv AI</p>
-            <p className="text-[12px] mt-0.5 leading-none" style={{ color: '#bbcabf' }}>Trading Assistant</p>
+            <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1' }}>Trading Tools</p>
           </div>
         </button>
         {onClose && (

@@ -448,7 +448,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
           style={{ background: '#0e0e0e', borderColor: 'rgba(60,74,66,0.3)', padding: '48px 0' }}
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto px-8">
-            <div style={{ fontWeight: 700, fontSize: 20, color: '#e5e2e1' }}>Deriv AI</div>
+            <div style={{ fontWeight: 700, fontSize: 20, color: '#e5e2e1' }}>Trading Tools</div>
             <div className="flex gap-8">
               {['Dashboard', 'Analyse', 'Positions'].map(l => (
                 <button
@@ -463,7 +463,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
               ))}
             </div>
             <p style={{ color: '#bbcabf', fontSize: 12, opacity: 0.7, fontFamily: 'JetBrains Mono, monospace' }}>
-              © 2026 Deriv AI · Indicatif uniquement
+              © 2026 Trading Tools · Indicatif uniquement
             </p>
           </div>
         </footer>

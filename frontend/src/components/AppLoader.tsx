@@ -72,7 +72,7 @@ export function AppLoader() {
       {/* Logo */}
       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400/90 to-blue-500/90 flex items-center justify-center font-black text-base text-zinc-950 mb-6 shadow-[0_18px_55px_rgba(34,211,238,0.18)]">DA</div>
 
-      <h1 className="text-xl font-bold text-white mb-1">Deriv AI Trading Assistant</h1>
+      <h1 className="text-xl font-bold text-white mb-1">Trading Tools</h1>
       <p className="text-zinc-400 text-sm mb-10">
         {currentStep ? currentStep.label + dots : 'Prêt' + dots}
       </p>

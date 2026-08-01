@@ -76,8 +76,7 @@ export default function App() {
                   </svg>
                 </div>
                 <div className="hidden sm:block leading-tight text-left">
-                  <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1', fontFamily: 'Inter, sans-serif' }}>Deriv AI</p>
-                  <p className="text-[12px] mt-0.5 leading-none" style={{ color: '#bbcabf', fontFamily: 'Inter, sans-serif' }}>Trading Assistant</p>
+                  <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1', fontFamily: 'Inter, sans-serif' }}>Trading Tools</p>
                 </div>
               </button>
 
@@ -171,7 +170,7 @@ export default function App() {
         {/* ── Footer vues internes ── */}
         {!isHome && (
           <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-3 flex items-center justify-between mt-auto">
-            <p className="text-[11px] text-zinc-600">© 2026 Deriv AI Trading Assistant</p>
+            <p className="text-[11px] text-zinc-600">© 2026 Trading Tools</p>
             <p className="text-[11px] text-zinc-600">Indicatif uniquement · Pas un conseil financier</p>
           </footer>
         )}

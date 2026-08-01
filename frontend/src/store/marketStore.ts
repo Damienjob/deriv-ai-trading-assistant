@@ -203,7 +203,6 @@ export const useMarketStore = create<MarketState>()(
 
   setTick: (tick, analysis) =>
     set((state) => {
-      // Dédoublonnage : ignorer si le dernier tick a le même timestamp ET le même prix
       const last = state.ticks[state.ticks.length - 1]
       if (last && last.timestamp === tick.timestamp && last.price === tick.price) {
         return analysis ? { analysis } : {}
@@ -212,7 +211,8 @@ export const useMarketStore = create<MarketState>()(
         currentTick: tick,
         ticks: [...state.ticks.slice(-299), tick],
         analysis: analysis ?? state.analysis,
-        isReady: state.candlesLoaded,
+        // isReady devient true dès qu'on a un tick — ne repasse JAMAIS à false
+        isReady: true,
       }
     }),
   setConnected: (v) => set({ isConnected: v }),
@@ -223,7 +223,7 @@ export const useMarketStore = create<MarketState>()(
     currentSymbol: s,
     ticks: [],
     analysis: null,
-    isReady: false,
+    // isReady reste true — on garde l'app affichée pendant le changement d'actif
     candlesLoaded: false,
     candles: { '1min': [], '5min': [], '15min': [], '30min': [], '1h': [] },
   }),
@@ -246,7 +246,7 @@ export const useMarketStore = create<MarketState>()(
     return {
       candles,
       candlesLoaded,
-      isReady: candlesLoaded,
+      ...(candlesLoaded && { isReady: true }),
     }
   }),
 

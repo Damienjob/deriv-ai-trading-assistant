@@ -24,20 +24,38 @@ function PriceGrid({ price, stake, pos, baseAmount }: {
           <p className="text-zinc-600 text-[11px] mt-0.5">{stake.pct_of_capital}% / {baseAmount}$</p>
         )}
       </div>
-      {pos && (
-        <>
-          <div className="rounded-xl p-3 bg-emerald-500/[0.07] border border-emerald-500/20">
-            <p className="text-[11px] text-emerald-500/80 font-medium mb-1">Take Profit</p>
+      {/* TP — depuis pos si disponible, sinon afficher — */}
+      <div className={`rounded-xl p-3 ${
+        pos ? 'bg-emerald-500/[0.07] border border-emerald-500/20' : 'stat-cell'
+      }`}>
+        <p className={`text-[11px] font-medium mb-1 ${
+          pos ? 'text-emerald-500/80' : 'stat-label'
+        }`}>Take Profit</p>
+        {pos ? (
+          <>
             <p className="font-mono font-bold text-emerald-300 text-base">{pos.take_profit.toFixed(4)}</p>
             <p className="text-emerald-600 text-[11px] mt-0.5">+{pos.tp_pips.toFixed(1)} pips</p>
-          </div>
-          <div className="rounded-xl p-3 bg-red-500/[0.07] border border-red-500/20">
-            <p className="text-[11px] text-red-500/80 font-medium mb-1">Stop Loss</p>
+          </>
+        ) : (
+          <p className="font-mono font-bold text-zinc-500 text-base">—</p>
+        )}
+      </div>
+      {/* SL — depuis pos si disponible, sinon afficher — */}
+      <div className={`rounded-xl p-3 ${
+        pos ? 'bg-red-500/[0.07] border border-red-500/20' : 'stat-cell'
+      }`}>
+        <p className={`text-[11px] font-medium mb-1 ${
+          pos ? 'text-red-500/80' : 'stat-label'
+        }`}>Stop Loss</p>
+        {pos ? (
+          <>
             <p className="font-mono font-bold text-red-400 text-base">{pos.stop_loss.toFixed(4)}</p>
             <p className="text-red-600 text-[11px] mt-0.5">-{pos.sl_pips.toFixed(1)} pips</p>
-          </div>
-        </>
-      )}
+          </>
+        ) : (
+          <p className="font-mono font-bold text-zinc-500 text-base">—</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -273,6 +291,7 @@ export function DecisionBanner() {
                   <span className="chip chip-accent">{sig.confidence}% — en attente</span>
                 </div>
                 <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{sig.why}</p>
+                <PriceGrid price={price} stake={stake} pos={pos} baseAmount={baseAmount} />
                 <LimitOrderCard pa={pa} isBuy currentPrice={price} />
                 {!pa?.limit_price && (
                   <div className="mt-3 rounded-xl bg-cyan-500/[0.07] border border-cyan-500/20 px-4 py-3">
@@ -310,6 +329,40 @@ export function DecisionBanner() {
               </div>
               <PriceGrid price={price} stake={stake} pos={pos} baseAmount={baseAmount} />
               <p className="text-zinc-400 text-sm mt-3 leading-relaxed">{sig.why}</p>
+
+              {/* ── Conseils position ── */}
+              {pos && (
+                <div className="mt-3 space-y-2">
+                  {/* Buy Limit */}
+                  {pos.buy_limit && (
+                    <div className="rounded-xl bg-emerald-500/[0.07] border border-emerald-500/20 px-4 py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-emerald-300 text-xs font-bold uppercase tracking-wide mb-0.5">Buy Limit suggéré</p>
+                        <p className="text-zinc-400 text-xs">Entrée optimale 0.3×ATR sous le prix actuel</p>
+                      </div>
+                      <p className="font-mono font-black text-emerald-300 text-lg shrink-0">{pos.buy_limit.toFixed(4)}</p>
+                    </div>
+                  )}
+                  {/* Alerte perte 25% */}
+                  {pos.loss_alert_price > 0 && (
+                    <div className="rounded-xl bg-red-500/[0.07] border border-red-500/20 px-4 py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-red-400 text-xs font-bold uppercase tracking-wide mb-0.5">⚠ Alerte perte 25%</p>
+                        <p className="text-zinc-400 text-xs">Couper la position si le prix descend à</p>
+                      </div>
+                      <p className="font-mono font-black text-red-400 text-lg shrink-0">{pos.loss_alert_price.toFixed(4)}</p>
+                    </div>
+                  )}
+                  {/* Sortie anticipée */}
+                  {pos.early_exit_advice && (
+                    <div className="rounded-xl bg-amber-500/[0.07] border border-amber-500/20 px-4 py-3">
+                      <p className="text-amber-300 text-xs font-bold uppercase tracking-wide mb-0.5">💡 Conseil sortie anticipée</p>
+                      <p className="text-zinc-400 text-xs leading-relaxed">{pos.early_exit_advice}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <FVGInfo analysis={analysis} price={price} isBuy />
               <ReasonsChips reasons={sig.reasons} color="text-emerald-300/80" />
             </div>
@@ -338,6 +391,7 @@ export function DecisionBanner() {
                 <span className="chip chip-warning">{sig.confidence}% — en attente</span>
               </div>
               <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{sig.why}</p>
+              <PriceGrid price={price} stake={stake} pos={pos} baseAmount={baseAmount} />
               <LimitOrderCard pa={pa} isBuy={false} currentPrice={price} />
               {!pa?.limit_price && (
                 <div className="mt-3 rounded-xl bg-orange-500/[0.07] border border-orange-500/20 px-4 py-3">
@@ -375,6 +429,40 @@ export function DecisionBanner() {
             </div>
             <PriceGrid price={price} stake={stake} pos={pos} baseAmount={baseAmount} />
             <p className="text-zinc-400 text-sm mt-3 leading-relaxed">{sig.why}</p>
+
+            {/* ── Conseils position ── */}
+            {pos && (
+              <div className="mt-3 space-y-2">
+                {/* Sell Limit */}
+                {pos.sell_limit && (
+                  <div className="rounded-xl bg-red-500/[0.07] border border-red-500/20 px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-red-400 text-xs font-bold uppercase tracking-wide mb-0.5">Sell Limit suggéré</p>
+                      <p className="text-zinc-400 text-xs">Entrée optimale 0.3×ATR au-dessus du prix actuel</p>
+                    </div>
+                    <p className="font-mono font-black text-red-400 text-lg shrink-0">{pos.sell_limit.toFixed(4)}</p>
+                  </div>
+                )}
+                {/* Alerte perte 25% */}
+                {pos.loss_alert_price > 0 && (
+                  <div className="rounded-xl bg-red-500/[0.07] border border-red-500/20 px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-red-400 text-xs font-bold uppercase tracking-wide mb-0.5">⚠ Alerte perte 25%</p>
+                      <p className="text-zinc-400 text-xs">Couper la position si le prix monte à</p>
+                    </div>
+                    <p className="font-mono font-black text-red-400 text-lg shrink-0">{pos.loss_alert_price.toFixed(4)}</p>
+                  </div>
+                )}
+                {/* Sortie anticipée */}
+                {pos.early_exit_advice && (
+                  <div className="rounded-xl bg-amber-500/[0.07] border border-amber-500/20 px-4 py-3">
+                    <p className="text-amber-300 text-xs font-bold uppercase tracking-wide mb-0.5">💡 Conseil sortie anticipée</p>
+                    <p className="text-zinc-400 text-xs leading-relaxed">{pos.early_exit_advice}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <FVGInfo analysis={analysis} price={price} isBuy={false} />
             <ReasonsChips reasons={sig.reasons} color="text-red-400/80" />
           </div>

@@ -25,12 +25,12 @@ class PositionPlan:
     stop_loss: float
     tp_pips: float
     sl_pips: float
-    risk_reward: float    # TP/SL ratio
+    risk_reward: float
 
     # Taille
-    lot_size: float       # mise par lot en $
-    nb_lots: int          # nombre de lots recommandés
-    total_stake: float    # lot_size × nb_lots
+    lot_size: float
+    nb_lots: int
+    total_stake: float
 
     # Gains/Pertes potentiels
     potential_gain: float
@@ -48,6 +48,13 @@ class PositionPlan:
     # Message global
     exit_message: str
     warning: str
+
+    # Seuil de perte et ordres limités
+    loss_alert_pct: float = 25.0          # alerte si perte >= 25% de la mise
+    loss_alert_price: float = 0.0         # prix déclenchant l'alerte
+    buy_limit: Optional[float] = None     # prix d'entrée limité BUY
+    sell_limit: Optional[float] = None    # prix d'entrée limité SELL
+    early_exit_advice: str = ""           # conseil de sortie anticipée
 
     def to_dict(self) -> dict:
         return {
@@ -74,6 +81,11 @@ class PositionPlan:
             },
             "exit_message": self.exit_message,
             "warning": self.warning,
+            "loss_alert_pct": self.loss_alert_pct,
+            "loss_alert_price": round(self.loss_alert_price, 4),
+            "buy_limit": round(self.buy_limit, 4) if self.buy_limit else None,
+            "sell_limit": round(self.sell_limit, 4) if self.sell_limit else None,
+            "early_exit_advice": self.early_exit_advice,
         }
 
 
@@ -201,6 +213,30 @@ def compute_position(
             f"Répétition limitée ({max_repeats}x). Budget insuffisant pour martingale."
         )
 
+    # ── Seuil de perte 25% ──
+    loss_alert_pct = 25.0
+    if direction == "BUY":
+        loss_alert_price = round(entry_price - sl_distance * 0.25 / 1.5, 4)
+    else:
+        loss_alert_price = round(entry_price + sl_distance * 0.25 / 1.5, 4)
+
+    # ── Buy Limit / Sell Limit ──
+    # Proposer une entrée limitée légèrement meilleure que le prix actuel
+    if direction == "BUY":
+        buy_limit  = round(entry_price - atr_value * 0.3, 4)  # entrée 0.3 ATR sous le prix
+        sell_limit = None
+    else:
+        sell_limit = round(entry_price + atr_value * 0.3, 4)  # entrée 0.3 ATR au-dessus
+        buy_limit  = None
+
+    # ── Conseil de sortie anticipée ──
+    # Affiché quand la position est en gain et qu'un nouveau signal se forme
+    midpoint_gain = round(total_stake * rr * 0.5, 2)
+    early_exit_advice = (
+        f"Si la position est en gain de +{midpoint_gain:.2f}$ ({round(rr*50)}% du TP), "
+        f"envisagez de couper si un nouveau signal opposé se forme."
+    )
+
     # ── Message de sortie ──
     if direction == "BUY":
         exit_message = (
@@ -248,4 +284,9 @@ def compute_position(
         repeat_advice=repeat_advice,
         exit_message=exit_message,
         warning=warning,
+        loss_alert_pct=loss_alert_pct,
+        loss_alert_price=loss_alert_price,
+        buy_limit=buy_limit,
+        sell_limit=sell_limit,
+        early_exit_advice=early_exit_advice,
     )

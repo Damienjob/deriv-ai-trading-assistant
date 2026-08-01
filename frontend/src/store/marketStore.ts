@@ -76,6 +76,11 @@ export interface PositionPlan {
   repeat: { max_repeats: number; advice: string }
   exit_message: string
   warning: string
+  loss_alert_pct: number
+  loss_alert_price: number
+  buy_limit: number | null
+  sell_limit: number | null
+  early_exit_advice: string
 }
 
 export interface PendingOrder {

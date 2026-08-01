@@ -689,23 +689,21 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
     # ── Conseil + Explication ──
     result.confirmation_ok = confirmation_ok
 
-    # ÉTAPE 4b : Confirmation Price Action sur M5 (détecteur de bougies)
-    # Indépendante de la confirmation indicateurs — donne le feu vert immédiat
-    # dès qu'un pattern (Engulfing, Pinbar, Marubozu) apparaît sur un niveau clé.
+    # ÉTAPE 4b : Confirmation Price Action sur M5 (bonus, non bloquant)
+    # Si un pattern est trouvé → boost de confiance + confirmation immédiate
+    # Si aucun pattern après 3 bougies confirmées → on entre quand même
     if result.signal in ("BUY", "SELL"):
         opens_m5_pa  = candle_store.get_opens(300)
         highs_m5_pa  = candle_store.get_highs(300)
         lows_m5_pa   = candle_store.get_lows(300)
         closes_m5_pa = candle_store.get_closes(300)
 
-        # FVG le plus proche pour le niveau clé
         fvg_bottom_pa: Optional[float] = None
         fvg_top_pa:    Optional[float] = None
         if result.nearest_fvg_entry:
             fvg_bottom_pa = result.nearest_fvg_entry.bottom
             fvg_top_pa    = result.nearest_fvg_entry.top
         elif result.fvgs:
-            # Chercher un FVG dans le bon sens
             fvg_dir = "bullish" if result.signal == "BUY" else "bearish"
             for f in result.fvgs:
                 if f.direction == fvg_dir:
@@ -724,14 +722,18 @@ def analyze(symbol: str = "R_50", base_amount: float = 100.0) -> Optional[MTFRes
                 fvg_bottom=fvg_bottom_pa,
                 fvg_top=fvg_top_pa,
             )
-            # Si Price Action confirme → booste la confiance même si indicateurs pas encore confirmés
             if result.price_action.confirmed:
+                # Pattern trouvé → confirmation immédiate + boost confiance
                 if not confirmation_ok:
-                    # La PA confirme → on considère le signal actionnable même sans les indicateurs
                     confirmation_ok = True
                     result.confirmation_ok = True
                     result.signal_label = f"Confirmé — {result.price_action.pattern_label}"
                 result.confidence = min(result.confidence + 10, 98)
+            elif confirmation_ok:
+                # 3 bougies confirmées mais pas de pattern → on entre quand même
+                # Le pattern est un bonus, pas un bloquant
+                result.signal_label = f"{result.signal} — 3 bougies confirmées"
+                result.confidence = min(result.confidence + 3, 98)  # léger bonus structure
 
     _build_advice(result, base_amount, confirmation_ok)
 

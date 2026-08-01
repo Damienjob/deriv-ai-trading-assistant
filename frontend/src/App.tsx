@@ -1,5 +1,5 @@
 /**
- * Deriv AI Trading Assistant
+ * Trading Tools
  */
 import { useState } from 'react'
 import { useWebSocket } from './hooks/useWebSocket'
@@ -32,12 +32,6 @@ export default function App() {
 
       {/* AppLoader par-dessus sans démonter l'app — évite le reset de la vue */}
       {!isReady && <div className="fixed inset-0 z-[9999]"><AppLoader /></div>}
-
-  const isHome        = view === 'home'
-  const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false
-
-  return (
-    <div className="app-bg min-h-screen">
 
       {/* ── Sidebar — visible uniquement sur les vues internes ── */}
       {!isHome && (

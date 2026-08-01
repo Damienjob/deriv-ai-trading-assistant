@@ -137,37 +137,31 @@ async def _connect_account(mgr):
 
 
 async def _broadcast_snapshot_when_ready():
-    """
-    Attend que toutes les bougies soient chargées puis broadcast le snapshot.
-    Ensuite envoie immédiatement un tick initial avec le prix du dernier tick historique
-    pour que le frontend passe l'étape "Collecte des données marché" sans attendre le poll.
-    """
     from app.routers.market import _build_candles_snapshot
     from app.analysis.engine import analyze
-    for _ in range(60):  # max 30s
+
+    # Les 3 TF essentiels suffisent pour démarrer (1min, 5min, 15min)
+    # 30min et 1h arrivent après — on ne bloque pas le frontend pour eux
+    REQUIRED_TF = {60, 300, 900}  # 1min, 5min, 15min
+
+    for _ in range(120):  # max 60s
         await asyncio.sleep(0.5)
         snapshot = _build_candles_snapshot()
-        if len(snapshot) == len(TIMEFRAMES):
+        loaded_grans = {g for g, label in TIMEFRAMES.items() if label in snapshot}
+        if REQUIRED_TF.issubset(loaded_grans):
             await manager.broadcast({"type": "candles_snapshot", "data": snapshot})
             logger.info(f"Snapshot bougies broadcasté ({len(snapshot)} TF)")
-
-            # Envoyer immédiatement un tick initial depuis l'historique
             last = tick_store.last
             if last:
                 result = analyze(symbol=last.symbol, base_amount=_base_amount)
-                msg: dict = {
-                    "type": "tick",
-                    "symbol": last.symbol,
-                    "price": last.price,
-                    "timestamp": last.timestamp,
-                }
+                msg: dict = {"type": "tick", "symbol": last.symbol, "price": last.price, "timestamp": last.timestamp}
                 if result:
                     msg["analysis"] = result.to_dict()
                 await manager.broadcast(msg)
                 logger.info(f"Tick initial broadcasté : {last.symbol} @ {last.price}")
             return
 
-    # Broadcast partiel si on n'a pas tous les TF
+    # Fallback : broadcast ce qu'on a
     snapshot = _build_candles_snapshot()
     if snapshot:
         await manager.broadcast({"type": "candles_snapshot", "data": snapshot})
@@ -200,7 +194,7 @@ async def run_deriv_connection():
             await deriv_client.fetch_tick_history(symbol, count=30)
             for gran in TIMEFRAMES:
                 await deriv_client.fetch_candles(symbol, gran, count=200)
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1.0)  # 1s entre chaque TF pour éviter le rate-limit Deriv
 
             # Broadcast snapshot quand les bougies sont prêtes (parallèle)
             asyncio.create_task(_broadcast_snapshot_when_ready())
@@ -215,10 +209,29 @@ async def run_deriv_connection():
             await asyncio.sleep(5)
 
 
+async def _keep_alive():
+    """Self-ping toutes les 10min pour éviter le cold start Render (plan gratuit)."""
+    import httpx
+    import os
+    url = os.getenv("RENDER_EXTERNAL_URL", "")
+    if not url:
+        return  # local ou non-Render, inutile
+    await asyncio.sleep(60)  # attendre que le serveur soit prêt
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                await client.get(f"{url}/health")
+            logger.debug("Keep-alive ping OK")
+        except Exception:
+            pass
+        await asyncio.sleep(600)  # 10 minutes
+
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Démarrage Deriv AI Trading Assistant v2")
     asyncio.create_task(run_deriv_connection())
+    asyncio.create_task(_keep_alive())
     # Connexion compte si token disponible
     if settings.deriv_api_token:
         from app.account import account_manager

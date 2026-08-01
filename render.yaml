@@ -12,3 +12,8 @@ services:
         sync: false          # à renseigner manuellement dans le dashboard Render
       - key: ALLOWED_ORIGINS
         value: '["https://deriv-ai-trading-assistant.vercel.app","http://localhost:5173"]'
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          type: web
+          name: deriv-ai-backend
+          property: host

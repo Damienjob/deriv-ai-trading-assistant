@@ -208,7 +208,7 @@ export const useMarketStore = create<MarketState>()(
         currentTick: tick,
         ticks: [...state.ticks.slice(-299), tick],
         analysis: analysis ?? state.analysis,
-        isReady: state.candlesLoaded && (analysis != null || state.analysis != null),
+        isReady: state.candlesLoaded,
       }
     }),
   setConnected: (v) => set({ isConnected: v }),
@@ -241,7 +241,7 @@ export const useMarketStore = create<MarketState>()(
     return {
       candles,
       candlesLoaded,
-      isReady: candlesLoaded && state.analysis != null,
+      isReady: candlesLoaded,
     }
   }),
 

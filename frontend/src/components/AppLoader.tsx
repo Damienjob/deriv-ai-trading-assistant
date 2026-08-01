@@ -13,9 +13,13 @@ const STEPS = [
   { label: 'Calcul des indicateurs MTF',   check: (s: ReturnType<typeof useMarketStore.getState>) => s.analysis != null },
 ]
 
+const COLD_START_DELAY = 8_000   // après 8s sans connexion → afficher le message cold start
+
 export function AppLoader() {
   const state = useMarketStore()
-  const [dots, setDots] = useState('')
+  const [dots, setDots]         = useState('')
+  const [timedOut, setTimedOut]   = useState(false)
+  const [coldStart, setColdStart] = useState(false)
 
   // Animation des points
   useEffect(() => {
@@ -23,11 +27,44 @@ export function AppLoader() {
     return () => clearInterval(t)
   }, [])
 
+  // Après 8s sans connexion → prévenir que le serveur se réveille (cold start Render)
+  useEffect(() => {
+    if (state.isConnected) return
+    const t = setTimeout(() => setColdStart(true), COLD_START_DELAY)
+    return () => clearTimeout(t)
+  }, [state.isConnected])
+
+  // Timeout 60s — Render free tier peut prendre jusqu'à 50s pour se réveiller
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 60_000)
+    return () => clearTimeout(t)
+  }, [])
+
   const completedCount = STEPS.filter(s => s.check(state)).length
   const progress = Math.round((completedCount / STEPS.length) * 100)
 
   // Étape courante = premier non-complété
   const currentStep = STEPS.find(s => !s.check(state))
+
+  // Timeout : afficher un message d'erreur si le backend est inaccessible
+  if (timedOut && !state.isConnected) {
+    return (
+      <div className="app-bg flex flex-col items-center justify-center px-6 gap-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-400/90 to-red-600/90 flex items-center justify-center font-black text-base text-white mb-2">!</div>
+        <h1 className="text-xl font-bold text-white">Connexion impossible</h1>
+        <p className="text-zinc-400 text-sm max-w-xs">
+          Le serveur est inaccessible. Vérifiez votre connexion internet ou réessayez dans quelques instants.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 rounded-xl font-bold text-sm"
+          style={{ background: '#4edea3', color: '#003824' }}
+        >
+          Réessayer
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="app-bg flex flex-col items-center justify-center px-6">
@@ -39,6 +76,16 @@ export function AppLoader() {
       <p className="text-zinc-400 text-sm mb-10">
         {currentStep ? currentStep.label + dots : 'Prêt' + dots}
       </p>
+
+      {/* Message cold start */}
+      {coldStart && !state.isConnected && (
+        <div className="w-full max-w-sm mb-6 px-4 py-3 rounded-xl text-center"
+          style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)' }}
+        >
+          <p className="text-yellow-400 text-xs font-semibold mb-0.5">⏳ Serveur en cours de démarrage…</p>
+          <p className="text-zinc-500 text-xs">Plan gratuit Render — première connexion ~20–30s</p>
+        </div>
+      )}
 
       {/* Barre de progression */}
       <div className="w-full max-w-sm mb-8">

@@ -4,7 +4,35 @@ import type { AppView } from '../store/marketStore'
 import {
   IconBolt, IconBarChart, IconInfo, IconShieldAlert,
   IconChevronDown, IconChevronUp, IconCheck, IconArrowUp, IconArrowDown,
+  IconLock, IconBan,
 } from '../components/Icon'
+
+function IconOptimalEntry({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  )
+}
+
+function IconWarning({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  )
+}
+
+function IconAlwaysDo({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  )
+}
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function Badge({ color, children }: { color: string; children: React.ReactNode }) {
@@ -72,7 +100,7 @@ function Rule({ ok, children }: { ok?: boolean; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
       <span className="mt-0.5 shrink-0" style={{ color: ok ? '#4edea3' : '#f87171' }}>
-        {ok ? <IconCheck size={14} /> : <IconShieldAlert size={14} />}
+        {ok ? <IconCheck size={14} /> : <IconBan size={14} />}
       </span>
       {children}
     </li>
@@ -96,7 +124,7 @@ function SectionDashboard({ onGo }: { onGo: () => void }) {
         {[
           { label: 'Bannière de décision', desc: 'ACHETEZ / VENDEZ / NE RIEN FAIRE — c\'est le verdict final de l\'algo après les 6 étapes.' },
           { label: 'Confiance %', desc: 'Score de 0 à 100. En dessous de 60 % → l\'algo ne donne pas de signal.' },
-          { label: 'Verrou 🔒', desc: 'Le signal est stable 3 à 5 min. Il ne change pas à chaque tick pour éviter le bruit.' },
+          { label: 'Verrou', desc: 'Le signal est stable 3 à 5 min. Il ne change pas à chaque tick pour éviter le bruit du marché.' },
           { label: 'Graphique bougies', desc: 'EMA 20/50, Bollinger Bands, zones FVG violettes, niveaux S/R. Changer le TF avec le sélecteur.' },
           { label: 'Plan de position', desc: 'TP, SL, Risk/Reward, mise recommandée, durée max, nombre de répétitions.' },
           { label: 'Tableau MTF', desc: '4 timeframes (1h / 15min / 5min / 1min) avec direction, RSI, MACD, ATR.' },
@@ -121,10 +149,10 @@ function SectionDashboard({ onGo }: { onGo: () => void }) {
           <ul className="space-y-1.5">
             <Rule ok>Bannière verte <strong>ACHETEZ</strong> affichée</Rule>
             <Rule ok>Confiance ≥ 70 % (idéalement ≥ 80 %)</Rule>
-            <Rule ok>Verrou actif 🔒 — signal stable, pas en train de changer</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Verrou actif <IconLock size={12} /> — signal stable, pas en train de changer</span></Rule>
             <Rule ok>Au moins 3/4 timeframes en direction haussière dans le tableau MTF</Rule>
             <Rule ok>RSI entre 45 et 70 sur M15 (pas en surachat)</Rule>
-            <Rule ok>Prix proche d'un FVG haussier ou d'un support → "Entrée optimale ⚡"</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Prix proche d'un FVG haussier ou d'un support → "Entrée optimale <IconOptimalEntry size={12} />"</span></Rule>
           </ul>
         </div>
         <div className="p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -135,10 +163,10 @@ function SectionDashboard({ onGo }: { onGo: () => void }) {
           <ul className="space-y-1.5">
             <Rule ok>Bannière rouge <strong>VENDEZ</strong> affichée</Rule>
             <Rule ok>Confiance ≥ 70 %</Rule>
-            <Rule ok>Verrou actif 🔒</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Verrou actif <IconLock size={12} /></span></Rule>
             <Rule ok>Au moins 3/4 timeframes en direction baissière</Rule>
             <Rule ok>RSI entre 30 et 55 sur M15 (pas en survente)</Rule>
-            <Rule ok>Prix proche d'un FVG baissier ou d'une résistance</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Prix proche d'un FVG baissier ou d'une résistance <IconOptimalEntry size={12} /></span></Rule>
           </ul>
         </div>
       </div>
@@ -149,7 +177,7 @@ function SectionDashboard({ onGo }: { onGo: () => void }) {
       </p>
       <ul className="space-y-1.5 mb-5">
         <Rule>Bannière <strong>NE RIEN FAIRE</strong> ou <strong>ATTENDRE</strong></Rule>
-        <Rule>Alerte rouge ⚠ "Signal invalidé" en haut de page</Rule>
+        <Rule><span className="inline-flex items-center gap-1"><IconWarning size={12} /> Alerte "Signal invalidé" en haut de page</span></Rule>
         <Rule>Confiance &lt; 60 %</Rule>
         <Rule>Volatilité "extreme" dans le contexte marché</Rule>
         <Rule>Moins de 2/4 TF alignés dans le tableau MTF</Rule>
@@ -229,10 +257,10 @@ function SectionAnalysis({ onGo }: { onGo: () => void }) {
 /* ── Section : Positions ─────────────────────────────────── */
 function SectionPositions({ onGo }: { onGo: () => void }) {
   return (
-    <Accordion title="Positions — Suivi et gestion du risque" icon={<IconBarChart size={18} />}>
+    <Accordion title="Positions — Tracker manuel et gestion du risque" icon={<IconBarChart size={18} />}>
       <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-        La page Positions affiche ton compte Deriv en temps réel : solde, positions ouvertes,
-        historique des trades. Elle te permet de surveiller tes trades actifs et de gérer le risque.
+        La page Positions est un <strong style={{ color: 'var(--text-primary)' }}>tracker manuel</strong> — il n'y a pas de connexion au compte Deriv.
+        Tu saisis toi-même tes trades ouverts, et l'outil les surveille en temps réel avec les données de prix et l'analyse de l'algo.
       </p>
 
       <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-faint)' }}>
@@ -240,10 +268,12 @@ function SectionPositions({ onGo }: { onGo: () => void }) {
       </p>
       <div className="grid sm:grid-cols-2 gap-3 mb-5">
         {[
-          { label: 'Solde du compte', desc: 'Solde temps réel connecté à ton compte Deriv via le token API.' },
-          { label: 'Positions ouvertes', desc: 'Trades en cours avec P&L en temps réel, direction, montant, durée.' },
-          { label: 'Historique', desc: 'Dernières transactions : gains, pertes, montants. Utile pour analyser ses performances.' },
-          { label: 'Tracker de position', desc: 'Suivi du TP/SL de la position en cours avec alerte si le prix approche du SL.' },
+          { label: 'Formulaire d\'ajout', desc: 'Saisis la direction (BUY/SELL), le lot, le prix d\'entrée et le TP optionnel. L\'outil commence à surveiller immédiatement.' },
+          { label: 'TP / SL calculés', desc: 'L\'algo calcule le TP et SL en temps réel à partir de l\'ATR et de la confiance du signal actuel.' },
+          { label: 'P&L en temps réel', desc: 'Profit ou perte estimé en $ mis à jour à chaque tick selon le prix actuel vs ton prix d\'entrée.' },
+          { label: 'Recommandation', desc: 'MAINTENIR / ALLÉGER / FERMER / COUPER — calculée selon le signal, la confiance et la perte max.' },
+          { label: 'Notifications de risque', desc: 'Alerte automatique si invalidation détectée, signal retourné, ou perte qui dépasse 1–2 % du capital.' },
+          { label: 'Plan de position', desc: 'Panneau droit : TP/SL de l\'algo, statut du signal, raison de sortie recommandée.' },
         ].map(({ label, desc }) => (
           <div key={label} className="p-3 rounded-xl" style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-base)' }}>
             <p className="text-xs font-bold mb-1" style={{ color: '#60a5fa' }}>{label}</p>
@@ -253,7 +283,26 @@ function SectionPositions({ onGo }: { onGo: () => void }) {
       </div>
 
       <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-faint)' }}>
-        Règles de gestion du risque à respecter
+        Comment utiliser le tracker
+      </p>
+      <div className="space-y-0">
+        <Step n={1} title="Ouvrir le trade sur Deriv d'abord">Va sur Deriv, ouvre ton trade (BUY ou SELL) avec le montant recommandé par le dashboard.</Step>
+        <Step n={2} title="Saisir la position ici">Reviens sur la page Positions. Sélectionne la direction, entre le lot, le prix d'entrée exact. Clique sur Enregistrer.</Step>
+        <Step n={3} title="Lire la recommandation">L'algo analyse en continu. La colonne Recommandation te dit quoi faire : MAINTENIR si le signal est aligné, FERMER si le signal a retourné.</Step>
+        <Step n={4} title="Réagir aux alertes">Si une alerte rouge apparaît (invalidation ou perte max), retourne sur Deriv et ferme le trade immédiatement.</Step>
+        <Step n={5} title="Supprimer la position">Une fois le trade fermé sur Deriv, clique sur la croix dans le tableau pour retirer la position du tracker.</Step>
+      </div>
+
+      <div className="mb-5 p-3 rounded-xl flex items-start gap-3" style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
+        <IconInfo size={15} style={{ color: '#60a5fa', marginTop: 1, flexShrink: 0 }} />
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Le tracker ne passe pas d'ordres automatiquement. C'est un outil de surveillance et d'aide à la décision.
+          Toutes les actions (ouvrir, fermer) se font manuellement sur Deriv.
+        </p>
+      </div>
+
+      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-faint)' }}>
+        Règles de gestion du risque
       </p>
       <ul className="space-y-1.5 mb-5">
         <Rule ok>Ne jamais dépasser la mise recommandée par l'algo (1–3 % du capital)</Rule>
@@ -279,18 +328,18 @@ function SectionGoldenRules() {
     <Accordion title="Règles d'or — À lire avant chaque session" icon={<IconShieldAlert size={18} />}>
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#4edea3' }}>✅ Toujours faire</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#4edea3' }}><IconAlwaysDo size={13} /> Toujours faire</p>
           <ul className="space-y-2">
-            <Rule ok>Attendre le verrou 🔒 avant d'entrer — jamais sur un signal en train de changer</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Attendre le verrou <IconLock size={12} /> avant d'entrer — jamais sur un signal en train de changer</span></Rule>
             <Rule ok>Vérifier la confiance : ≥ 70 % minimum, ≥ 80 % idéal</Rule>
             <Rule ok>Lire le plan de position complet (TP, SL, R:R) avant d'ouvrir le trade</Rule>
             <Rule ok>Utiliser uniquement la mise recommandée par l'algo</Rule>
             <Rule ok>Surveiller l'invalidation tick par tick sur le dashboard</Rule>
-            <Rule ok>Sortir immédiatement si la bannière passe en ⚠ "Signal invalidé"</Rule>
+            <Rule ok><span className="inline-flex items-center gap-1">Sortir immédiatement si la bannière affiche <IconWarning size={12} /> "Signal invalidé"</span></Rule>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#f87171' }}>❌ Ne jamais faire</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#f87171' }}><IconBan size={13} /> Ne jamais faire</p>
           <ul className="space-y-2">
             <Rule>Entrer sur un signal WAIT ou NE RIEN FAIRE</Rule>
             <Rule>Ignorer le SL parce qu'on "pense" que le marché va revenir</Rule>
@@ -303,7 +352,7 @@ function SectionGoldenRules() {
       </div>
 
       <div className="mt-5 p-4 rounded-xl" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
-        <p className="text-xs font-bold mb-1" style={{ color: '#fcd34d' }}>⚠ Avertissement</p>
+        <p className="text-xs font-bold mb-1 flex items-center gap-1.5" style={{ color: '#fcd34d' }}><IconWarning size={13} /> Avertissement</p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           Cet outil est un assistant d'analyse. Il ne garantit aucun gain. Tout trading comporte un risque
           de perte en capital. Les indices synthétiques Deriv (Boom/Crash) peuvent générer des pertes très rapides.
@@ -341,7 +390,7 @@ function SectionFlow() {
         </Step>
         <Step n={5} title="Fair Value Gaps (FVG)">
           Détecte les zones d'imbalance sur 60 bougies M15. FVG fort proche → +8 pts de confiance.
-          Prix dans la zone → message "Entrée optimale ⚡".
+          Prix dans la zone → message "Entrée optimale" avec icône <IconOptimalEntry size={12} />.
         </Step>
         <Step n={6} title="Signal verrouillé">
           BUY ou SELL si confiance ≥ 60 %. Verrou 5 min (≥ 80 %) ou 3 min.

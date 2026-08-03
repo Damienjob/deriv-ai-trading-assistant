@@ -59,6 +59,13 @@ function useTheme() {
     }
     localStorage.setItem('theme', theme)
   }, [theme])
+  // Appliquer immédiatement au montage pour éviter le flash
+  useEffect(() => {
+    const saved = localStorage.getItem('theme')
+    if (saved !== 'light') {
+      document.documentElement.classList.remove('light')
+    }
+  }, [])
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
   return { theme, toggle }
 }

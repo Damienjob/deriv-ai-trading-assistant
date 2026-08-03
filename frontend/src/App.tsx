@@ -78,7 +78,7 @@ export default function App() {
               <nav className="hidden md:flex gap-8 items-center">
                 {([
                   { key: 'dashboard' as AppView, label: 'Dashboard' },
-                  { key: 'analysis'  as AppView, label: 'Analysis'  },
+                  { key: 'analysis'  as AppView, label: 'Analyse'   },
                 ] as { key: AppView; label: string }[]).map(({ key, label }) => (
                   <button
                     key={key}
@@ -90,14 +90,6 @@ export default function App() {
                     {label}
                   </button>
                 ))}
-                <a
-                  href="#pricing"
-                  style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, color: '#bbcabf', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLAnchorElement).style.color = '#e5e2e1')}
-                  onMouseLeave={e => ((e.currentTarget as HTMLAnchorElement).style.color = '#bbcabf')}
-                >
-                  Pricing
-                </a>
               </nav>
 
               {/* CTA */}

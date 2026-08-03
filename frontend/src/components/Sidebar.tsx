@@ -148,9 +148,9 @@ export function Sidebar({
 
       {/* Drawer mobile */}
       <aside
-        className={`fixed z-50 inset-y-0 left-0 w-64 bg-[#0d1120] border-r border-white/[0.06]
+        className={`fixed z-50 inset-y-0 left-0 w-60 bg-[#0d1120] border-r border-white/[0.06]
           transform transition-transform duration-300 ease-in-out lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
       >
         <SidebarContent active={active} onNavigate={onNavigate} onClose={onClose} />

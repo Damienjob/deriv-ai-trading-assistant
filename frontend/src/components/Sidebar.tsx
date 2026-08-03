@@ -1,11 +1,12 @@
-import { IconBarChart, IconBolt, IconInfo, IconX } from './Icon'
+import { IconBarChart, IconBolt, IconInfo, IconX, IconHelpCircle } from './Icon'
 import type { AppView } from '../store/marketStore'
 export type { AppView }
 
 const NAV: Array<{ key: AppView; label: string; Icon: (props: any) => any; badge?: string }> = [
-  { key: 'dashboard', label: 'Dashboard', Icon: IconBolt,     badge: 'Live' },
+  { key: 'dashboard', label: 'Dashboard', Icon: IconBolt,        badge: 'Live' },
   { key: 'analysis',  label: 'Analyse',   Icon: IconInfo },
   { key: 'positions', label: 'Positions', Icon: IconBarChart },
+  { key: 'support',   label: 'Guide',     Icon: IconHelpCircle },
 ]
 
 function SidebarContent({

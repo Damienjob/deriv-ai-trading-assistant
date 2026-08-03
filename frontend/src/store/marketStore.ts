@@ -163,7 +163,7 @@ export interface OHLCCandle {
 
 export type Timeframe = '1min' | '5min' | '15min' | '30min' | '1h'
 
-export type AppView = 'home' | 'dashboard' | 'analysis' | 'positions'
+export type AppView = 'home' | 'dashboard' | 'analysis' | 'positions' | 'support'
 
 interface MarketState {
   currentTick: Tick | null

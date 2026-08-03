@@ -14,6 +14,7 @@ import { HomeView } from './views/HomeView'
 import { DashboardView } from './views/DashboardView'
 import { AnalysisView } from './views/AnalysisView'
 import { PositionsView } from './views/PositionsView'
+import { SupportView } from './views/SupportView'
 
 function ThemeToggle({ theme, onToggle }: { theme: 'dark' | 'light'; onToggle: () => void }) {
   const isDark = theme === 'dark'
@@ -205,6 +206,7 @@ export default function App() {
           {view === 'dashboard' && <DashboardView />}
           {view === 'analysis'  && <AnalysisView />}
           {view === 'positions' && <PositionsView />}
+          {view === 'support'   && <SupportView />}
         </main>
 
         {/* ── Footer vues internes ── */}

@@ -21,7 +21,7 @@ function SidebarContent({
     <div className="flex flex-col h-full">
 
       {/* ── Logo cliquable → accueil ── */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
+      <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: '1px solid var(--border-sidebar)' }}>
         <button
           onClick={() => { onNavigate('home'); onClose?.() }}
           className="flex items-center gap-3 group"
@@ -40,7 +40,7 @@ function SidebarContent({
             <IconBarChart size={20} />
           </div>
           <div className="leading-tight text-left">
-            <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1' }}>Trading Tools</p>
+            <p className="font-bold text-[15px] leading-none" style={{ color: 'var(--text-primary)' }}>Trading Tools</p>
           </div>
         </button>
         {onClose && (
@@ -54,7 +54,7 @@ function SidebarContent({
 
       {/* ── Nav ── */}
       <div className="px-3 pt-5 pb-2">
-        <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-zinc-600 px-2 mb-3">
+        <p className="text-[10px] font-bold tracking-[0.14em] uppercase px-2 mb-3" style={{ color: 'var(--text-faint)' }}>
           Navigation
         </p>
         <nav className="space-y-1">
@@ -67,15 +67,15 @@ function SidebarContent({
                 className={`
                   relative group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
                   text-sm font-medium transition-all duration-150
-                  ${isActive
-                    ? 'text-emerald-300'
-                    : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
-                  }
                 `}
                 style={isActive ? {
                   background: 'rgba(78,222,163,0.12)',
                   border: '1px solid rgba(78,222,163,0.2)',
-                } : { border: '1px solid transparent' }}
+                  color: '#4edea3',
+                } : {
+                  border: '1px solid transparent',
+                  color: 'var(--text-secondary)',
+                }}
               >
                 <span className={`shrink-0 transition-colors ${isActive ? 'text-emerald-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
                   <item.Icon size={16} />
@@ -134,13 +134,14 @@ export function Sidebar({
   return (
     <>
       {/* Desktop permanent */}
-      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-60 z-40 bg-[#0d1120] border-r border-white/[0.06]">
+      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-60 z-40"
+        style={{ background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-sidebar)' }}>
         <SidebarContent active={active} onNavigate={onNavigate} />
       </aside>
 
       {/* Overlay mobile */}
       <div
-        className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -148,10 +149,11 @@ export function Sidebar({
 
       {/* Drawer mobile */}
       <aside
-        className={`fixed z-50 inset-y-0 left-0 w-60 bg-[#0d1120] border-r border-white/[0.06]
+        className={`fixed z-50 inset-y-0 left-0 w-60
           transform transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
+        style={{ background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-sidebar)' }}
       >
         <SidebarContent active={active} onNavigate={onNavigate} onClose={onClose} />
       </aside>

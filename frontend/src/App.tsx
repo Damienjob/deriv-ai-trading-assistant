@@ -1,7 +1,7 @@
 /**
  * Trading Tools
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useWebSocket } from './hooks/useWebSocket'
 import { useMarketStore } from './store/marketStore'
 import { AppLoader } from './components/AppLoader'
@@ -15,11 +15,59 @@ import { DashboardView } from './views/DashboardView'
 import { AnalysisView } from './views/AnalysisView'
 import { PositionsView } from './views/PositionsView'
 
+function ThemeToggle({ theme, onToggle }: { theme: 'dark' | 'light'; onToggle: () => void }) {
+  const isDark = theme === 'dark'
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+      className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+      style={{
+        background: 'var(--bg-stat)',
+        border: '1px solid var(--border-base)',
+        color: 'var(--text-secondary)',
+      }}
+      title={isDark ? 'Mode clair' : 'Mode sombre'}
+    >
+      {isDark ? (
+        /* Soleil */
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      ) : (
+        /* Lune */
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      )}
+    </button>
+  )
+}
+
+function useTheme() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('theme') as 'dark' | 'light') ?? 'dark'
+  })
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+    } else {
+      root.classList.remove('light')
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  return { theme, toggle }
+}
+
 export default function App() {
   useWebSocket()
   useNotifications()
   const { isReady, currentSymbol, analysis, currentView, setCurrentView } = useMarketStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { theme, toggle } = useTheme()
 
   const view    = currentView
   const setView = setCurrentView
@@ -49,8 +97,8 @@ export default function App() {
         {/* ── Header accueil ── */}
         {isHome && (
           <header
-            className="fixed top-0 w-full z-50 border-b backdrop-blur-xl"
-            style={{ background: 'rgba(10,10,10,0.85)', borderColor: 'rgba(60,74,66,0.3)' }}
+            className="fixed top-0 w-full z-50 backdrop-blur-xl"
+            style={{ background: 'var(--bg-header)', borderBottom: '1px solid var(--border-subtle)' }}
           >
             <div className="flex justify-between items-center h-20 px-4 sm:px-8 max-w-7xl mx-auto gap-4">
 
@@ -70,7 +118,7 @@ export default function App() {
                   </svg>
                 </div>
                 <div className="hidden sm:block leading-tight text-left">
-                  <p className="font-bold text-[15px] leading-none" style={{ color: '#e5e2e1', fontFamily: 'Inter, sans-serif' }}>Trading Tools</p>
+                  <p className="font-bold text-[15px] leading-none" style={{ color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>Trading Tools</p>
                 </div>
               </button>
 
@@ -83,55 +131,61 @@ export default function App() {
                   <button
                     key={key}
                     onClick={() => setView(key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 16, color: '#bbcabf', transition: 'color 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#e5e2e1')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#bbcabf')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 16, color: 'var(--text-secondary)', transition: 'color 0.2s' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
                   >
                     {label}
                   </button>
                 ))}
               </nav>
 
-              {/* CTA */}
-              <button
-                onClick={() => setView('dashboard')}
-                className="shrink-0"
-                style={{ background: '#4edea3', color: '#003824', padding: '10px 20px', borderRadius: 8, fontWeight: 700, fontSize: 14, boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(78,222,163,0.5)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
-              >
-                Ouvrir le Dashboard
-              </button>
+              {/* CTA + toggle */}
+              <div className="flex items-center gap-3 shrink-0">
+                <ThemeToggle theme={theme} onToggle={toggle} />
+                <button
+                  onClick={() => setView('dashboard')}
+                  style={{ background: '#4edea3', color: '#003824', padding: '10px 20px', borderRadius: 8, fontWeight: 700, fontSize: 14, boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(78,222,163,0.5)' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(78,222,163,0.3)' }}
+                >
+                  Ouvrir le Dashboard
+                </button>
+              </div>
             </div>
           </header>
         )}
 
         {/* ── Header vues internes ── */}
         {!isHome && (
-          <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0d1526]/95 backdrop-blur-xl">
+          <header className="sticky top-0 z-30 backdrop-blur-xl"
+            style={{ background: 'var(--bg-header)', borderBottom: '1px solid var(--border-subtle)' }}>
             <div className="px-4 sm:px-6 h-14 flex items-center gap-4">
 
               {/* Burger mobile */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors shrink-0"
+                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0"
+                style={{ color: 'var(--text-muted)' }}
                 aria-label="Ouvrir le menu"
               >
                 <IconMenu size={17} />
               </button>
 
               {/* Symbol pill */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                style={{ background: 'var(--bg-stat)', border: '1px solid var(--border-base)' }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#4edea3' }} />
-                <span className="text-[12px] font-mono font-semibold text-zinc-300">{currentSymbol}</span>
-                <span className="text-zinc-600 text-[11px] mx-0.5">·</span>
-                <span className="text-[11px] text-zinc-500 font-mono">M1 M5 M15 H1</span>
+                <span className="text-[12px] font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{currentSymbol}</span>
+                <span className="text-[11px] mx-0.5" style={{ color: 'var(--text-faint)' }}>·</span>
+                <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>M1 M5 M15 H1</span>
               </div>
 
               <div className="flex-1" />
 
               <div className="flex items-center gap-2">
                 <NotificationPermission />
+                <ThemeToggle theme={theme} onToggle={toggle} />
                 <ConnectionStatus />
               </div>
             </div>
@@ -155,9 +209,10 @@ export default function App() {
 
         {/* ── Footer vues internes ── */}
         {!isHome && (
-          <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-3 flex items-center justify-between mt-auto">
-            <p className="text-[11px] text-zinc-600">© 2026 Trading Tools</p>
-            <p className="text-[11px] text-zinc-600">Indicatif uniquement · Pas un conseil financier</p>
+          <footer className="px-4 sm:px-6 py-3 flex items-center justify-between mt-auto"
+            style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>© 2026 Trading Tools</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Indicatif uniquement · Pas un conseil financier</p>
           </footer>
         )}
 

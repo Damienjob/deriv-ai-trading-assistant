@@ -1,16 +1,95 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    color-scheme: dark;
-  }
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Dark (défaut)
+══════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: dark;
 
+  /* Backgrounds */
+  --bg-base:        #060810;
+  --bg-page:        #080c14;
+  --bg-surface:     rgba(255,255,255,0.03);
+  --bg-surface-solid: #0d1120;
+  --bg-raised:      #111827;
+  --bg-sidebar:     #0d1120;
+  --bg-header:      rgba(13,21,38,0.95);
+  --bg-stat:        rgba(255,255,255,0.03);
+  --bg-input:       rgba(255,255,255,0.04);
+  --bg-ticker:      rgba(0,0,0,0.2);
+  --bg-card-glass:  rgba(255,255,255,0.03);
+
+  /* Borders */
+  --border-base:    rgba(255,255,255,0.07);
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-strong:  rgba(255,255,255,0.12);
+  --border-sidebar: rgba(255,255,255,0.06);
+
+  /* Text */
+  --text-primary:   #f4f4f5;   /* zinc-100 */
+  --text-secondary: #a1a1aa;   /* zinc-400 */
+  --text-muted:     #71717a;   /* zinc-500 */
+  --text-faint:     #3f3f46;   /* zinc-700 */
+
+  /* Shadows */
+  --shadow-surface: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.40);
+  --shadow-raised:  0 1px 0 0 rgba(255,255,255,0.06) inset, 0 12px 40px rgba(0,0,0,0.45);
+
+  /* App gradient */
+  --app-gradient:
+    radial-gradient(ellipse 900px 500px at 15% 0%,  rgba(34,211,238,0.08),  transparent 65%),
+    radial-gradient(ellipse 800px 500px at 85% -5%, rgba(59,130,246,0.10),  transparent 65%),
+    radial-gradient(ellipse 600px 400px at 50% 100%,rgba(34,197,94,0.06),   transparent 60%),
+    linear-gradient(180deg, #060810 0%, #080c14 50%, #060810 100%);
+}
+
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Light
+══════════════════════════════════════════════════════════ */
+.light {
+  color-scheme: light;
+
+  --bg-base:          #f0f4f8;
+  --bg-page:          #e8edf3;
+  --bg-surface:       rgba(255,255,255,0.80);
+  --bg-surface-solid: #ffffff;
+  --bg-raised:        #ffffff;
+  --bg-sidebar:       #ffffff;
+  --bg-header:        rgba(255,255,255,0.92);
+  --bg-stat:          rgba(0,0,0,0.04);
+  --bg-input:         rgba(0,0,0,0.04);
+  --bg-ticker:        rgba(255,255,255,0.6);
+  --bg-card-glass:    rgba(255,255,255,0.75);
+
+  --border-base:      rgba(0,0,0,0.08);
+  --border-subtle:    rgba(0,0,0,0.06);
+  --border-strong:    rgba(0,0,0,0.14);
+  --border-sidebar:   rgba(0,0,0,0.07);
+
+  --text-primary:     #0f172a;   /* slate-900 */
+  --text-secondary:   #475569;   /* slate-600 */
+  --text-muted:       #64748b;   /* slate-500 */
+  --text-faint:       #94a3b8;   /* slate-400 */
+
+  --shadow-surface: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-raised:  0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 24px rgba(0,0,0,0.10);
+
+  --app-gradient:
+    radial-gradient(ellipse 900px 500px at 15% 0%,  rgba(16,185,129,0.06),  transparent 65%),
+    radial-gradient(ellipse 800px 500px at 85% -5%, rgba(59,130,246,0.05),  transparent 65%),
+    radial-gradient(ellipse 600px 400px at 50% 100%,rgba(34,197,94,0.04),   transparent 60%),
+    linear-gradient(180deg, #f0f4f8 0%, #e8edf3 50%, #f0f4f8 100%);
+}
+
+@layer base {
   html, body {
     height: 100%;
   }
 
   body {
-    @apply bg-[#060810] text-zinc-100 antialiased;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    @apply antialiased;
     font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1, "cv02" 1;
   }
 
@@ -25,12 +104,9 @@
 
 @layer components {
   .app-bg {
-    @apply min-h-screen text-zinc-100;
-    background:
-      radial-gradient(ellipse 900px 500px at 15% 0%, rgba(34, 211, 238, 0.08), transparent 65%),
-      radial-gradient(ellipse 800px 500px at 85% -5%, rgba(59, 130, 246, 0.10), transparent 65%),
-      radial-gradient(ellipse 600px 400px at 50% 100%, rgba(34, 197, 94, 0.06), transparent 60%),
-      linear-gradient(180deg, #060810 0%, #080c14 50%, #060810 100%);
+    min-height: 100vh;
+    color: var(--text-primary);
+    background: var(--app-gradient);
   }
 
   .app-container {
@@ -39,48 +115,50 @@
 
   /* ── Surfaces ── */
   .surface {
-    @apply rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm;
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.40);
+    @apply rounded-2xl backdrop-blur-sm;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-base);
+    box-shadow: var(--shadow-surface);
   }
 
   .surface-solid {
-    @apply rounded-2xl border border-white/[0.07] bg-[#0d1120];
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.40);
+    @apply rounded-2xl;
+    background: var(--bg-surface-solid);
+    border: 1px solid var(--border-base);
+    box-shadow: var(--shadow-surface);
   }
 
   .surface-raised {
-    @apply rounded-2xl border border-white/[0.09] bg-[#111827];
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 12px 40px rgba(0,0,0,0.45);
+    @apply rounded-2xl;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-raised);
   }
 
   /* ── Chips / badges ── */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-0.5 text-xs font-semibold text-zinc-300;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    border: 1px solid var(--border-base);
+    background: var(--bg-stat);
+    color: var(--text-secondary);
   }
 
-  .chip-accent {
-    @apply border-cyan-500/30 bg-cyan-500/10 text-cyan-300;
-  }
-
-  .chip-success {
-    @apply border-emerald-500/30 bg-emerald-500/10 text-emerald-300;
-  }
-
-  .chip-danger {
-    @apply border-red-500/30 bg-red-500/10 text-red-300;
-  }
-
-  .chip-warning {
-    @apply border-amber-500/30 bg-amber-500/10 text-amber-300;
-  }
+  .chip-accent  { @apply border-cyan-500/30    bg-cyan-500/10    text-cyan-600    dark:text-cyan-300; }
+  .chip-success { @apply border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300; }
+  .chip-danger  { @apply border-red-500/30     bg-red-500/10     text-red-700     dark:text-red-300; }
+  .chip-warning { @apply border-amber-500/30   bg-amber-500/10   text-amber-700   dark:text-amber-300; }
 
   /* ── Buttons ── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-200 transition-all hover:bg-white/[0.07] hover:border-white/[0.12] active:scale-[0.98] cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-[0.98] cursor-pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-stat);
+    color: var(--text-primary);
   }
+  .btn:hover { background: var(--bg-input); }
 
   .btn-strong {
-    @apply border-cyan-500/30 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/[0.16] hover:border-cyan-500/40;
+    @apply border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-200 hover:bg-cyan-500/[0.16] hover:border-cyan-500/40;
   }
 
   .btn-primary {
@@ -89,46 +167,51 @@
 
   /* ── Glass panel ── */
   .glass-panel {
-    @apply rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm;
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.40);
+    @apply rounded-2xl backdrop-blur-sm;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-base);
+    box-shadow: var(--shadow-surface);
   }
 
   /* ── Glass card (HomeView) ── */
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card-glass);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-strong);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-surface);
   }
 
   .glass-card::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
   }
 
   /* ── Section label ── */
   .section-label {
-    @apply text-[10px] font-bold tracking-[0.14em] uppercase text-zinc-500;
+    @apply text-[10px] font-bold tracking-[0.14em] uppercase;
+    color: var(--text-muted);
   }
 
   /* ── Stat cell ── */
   .stat-cell {
-    @apply rounded-xl border border-white/[0.07] bg-white/[0.03] p-3;
+    @apply rounded-xl p-3;
+    background: var(--bg-stat);
+    border: 1px solid var(--border-base);
   }
 
   .stat-label {
-    @apply text-[11px] text-zinc-500 font-medium mb-1 leading-none;
+    @apply text-[11px] font-medium mb-1 leading-none;
+    color: var(--text-muted);
   }
 
   .stat-value {
-    @apply font-mono font-bold text-white text-base leading-none;
+    @apply font-mono font-bold text-base leading-none;
+    color: var(--text-primary);
   }
 
   /* ── Hero gradient ── */
@@ -138,7 +221,10 @@
 
   /* ── Ticker ── */
   .ticker-wrap {
-    @apply w-full overflow-hidden border-y border-white/[0.06] bg-black/20;
+    @apply w-full overflow-hidden;
+    background: var(--bg-ticker);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .ticker-move {
@@ -148,19 +234,20 @@
   }
 
   /* ── Reveal animation ── */
-  .reveal {
-    @apply opacity-0 translate-y-5;
-  }
-
-  .reveal-show {
-    @apply opacity-100 translate-y-0;
-  }
+  .reveal      { @apply opacity-0 translate-y-5; }
+  .reveal-show { @apply opacity-100 translate-y-0; }
 
   /* ── Input ── */
   .input-base {
-    @apply bg-white/[0.04] border border-white/[0.08] text-white rounded-xl px-3 py-2
-           text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20
-           placeholder:text-zinc-600 transition-colors;
+    @apply rounded-xl px-3 py-2 text-sm focus:outline-none transition-colors;
+    background: var(--bg-input);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+  }
+  .input-base::placeholder { color: var(--text-faint); }
+  .input-base:focus {
+    border-color: rgba(6,182,212,0.5);
+    box-shadow: 0 0 0 3px rgba(6,182,212,0.12);
   }
 }
 

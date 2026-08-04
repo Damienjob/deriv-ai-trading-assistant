@@ -19,17 +19,48 @@ function MatIcon({ name, fill = 0, className = '', style }: { name: string; fill
 
 // ── Ticker live ───────────────────────────────────────────────────────────────
 function LiveTicker() {
-  const [prices, setPrices] = useState<PriceItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const CACHE_KEY = 'market_prices_cache_v1'
+
+  const readCache = () => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY)
+      if (!raw) return null
+      const parsed = JSON.parse(raw) as { ts?: number; prices?: PriceItem[] }
+      if (!parsed || !Array.isArray(parsed.prices) || typeof parsed.ts !== 'number') return null
+      return { ts: parsed.ts, prices: parsed.prices }
+    } catch {
+      return null
+    }
+  }
+
+  const [prices, setPrices] = useState<PriceItem[]>(() => readCache()?.prices ?? [])
+  const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(() => readCache()?.ts ?? null)
+  const [loading, setLoading] = useState(() => (readCache()?.prices?.length ? false : true))
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine)
 
   const fetchPrices = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/market/prices`)
-      if (!res.ok) return
+      if (!res.ok) throw new Error('bad_status')
       const data = await res.json()
       const list: PriceItem[] = Object.values(data.prices ?? {}) as PriceItem[]
-      if (list.length > 0) setPrices(list)
-    } catch { /* backend indisponible */ } finally { setLoading(false) }
+      if (list.length > 0) {
+        setPrices(list)
+        const ts = Date.now()
+        setLastUpdatedTs(ts)
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, prices: list }))
+      }
+      setIsOffline(false)
+    } catch {
+      setIsOffline(true)
+      const cached = readCache()
+      if (cached?.prices?.length) {
+        setPrices(cached.prices)
+        setLastUpdatedTs(cached.ts)
+      }
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -39,32 +70,45 @@ function LiveTicker() {
   }, [fetchPrices])
 
   const items = useMemo(() => [...prices, ...prices], [prices])
+  const lastUpdatedLabel = useMemo(() => {
+    if (!lastUpdatedTs) return null
+    return new Date(lastUpdatedTs).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  }, [lastUpdatedTs])
 
   if (loading) return (
     <div className="ticker-wrap py-3 flex items-center justify-center gap-2">
       <span className="w-3 h-3 border-2 border-emerald-400/60 border-t-transparent rounded-full animate-spin" />
-      <span className="text-xs font-mono" style={{ color: '#bbcabf' }}>Chargement des prix…</span>
+      <span className="text-xs font-mono" style={{ color: '#bbcabf' }}>
+        {isOffline ? 'Connexion requise…' : 'Chargement des prix…'}
+      </span>
     </div>
   )
   if (prices.length === 0) return null
 
   return (
-    <div className="ticker-wrap py-3 overflow-hidden">
-      <div className="ticker-move inline-flex" style={{ animationDuration: '90s' }}>
-        {items.map((item, i) => {
-          const up = item.change_pct >= 0
-          const col = up ? '#4edea3' : '#f87171'
-          return (
-            <span key={i} className="inline-flex items-center gap-2 px-8 shrink-0 font-mono text-xs">
-              <span className="font-bold tracking-wide" style={{ color: col }}>{item.label}</span>
-              <span style={{ color: col }}>{item.price.toFixed(item.price > 100 ? 2 : 4)}</span>
-              <span className="font-semibold" style={{ color: col }}>
-                ({up ? '+' : ''}{item.change_pct.toFixed(2)}%)
+    <div>
+      {isOffline && lastUpdatedLabel && (
+        <div className="py-1 text-center text-[11px] font-mono" style={{ color: '#bbcabf' }}>
+          Hors-ligne · dernière mise à jour {lastUpdatedLabel}
+        </div>
+      )}
+      <div className="ticker-wrap py-3 overflow-hidden">
+        <div className="ticker-move inline-flex" style={{ animationDuration: '90s' }}>
+          {items.map((item, i) => {
+            const up = item.change_pct >= 0
+            const col = up ? '#4edea3' : '#f87171'
+            return (
+              <span key={i} className="inline-flex items-center gap-2 px-8 shrink-0 font-mono text-xs">
+                <span className="font-bold tracking-wide" style={{ color: col }}>{item.label}</span>
+                <span style={{ color: col }}>{item.price.toFixed(item.price > 100 ? 2 : 4)}</span>
+                <span className="font-semibold" style={{ color: col }}>
+                  ({up ? '+' : ''}{item.change_pct.toFixed(2)}%)
+                </span>
+                <span style={{ color: '#3c4a42' }} className="mx-1">·</span>
               </span>
-              <span style={{ color: '#3c4a42' }} className="mx-1">·</span>
-            </span>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )

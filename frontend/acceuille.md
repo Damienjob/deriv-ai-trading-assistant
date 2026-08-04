@@ -480,6 +480,6 @@
         document.querySelectorAll('.glass-card').forEach(card => {
             card.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-4');
             observer.observe(card);
-        });
+         });
     </script>
 </body></html>

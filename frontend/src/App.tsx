@@ -10,6 +10,8 @@ import { NotificationPermission } from './components/NotificationPermission'
 import { useNotifications } from './hooks/useNotifications'
 import { Sidebar, type AppView } from './components/Sidebar'
 import { IconMenu } from './components/Icon'
+import { OfflineBanner } from './components/OfflineBanner'
+import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { HomeView } from './views/HomeView'
 import { DashboardView } from './views/DashboardView'
 import { AnalysisView } from './views/AnalysisView'
@@ -76,6 +78,7 @@ export default function App() {
   const { isReady, currentSymbol, analysis, currentView, setCurrentView } = useMarketStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { theme, toggle } = useTheme()
+  const isOnline = useOnlineStatus()
 
   const view    = currentView
   const setView = setCurrentView
@@ -209,6 +212,7 @@ export default function App() {
 
         {/* ── Contenu ── */}
         <main className={`flex-1 w-full ${isHome ? 'pt-20' : 'px-4 sm:px-6 py-6 max-w-7xl mx-auto'}`}>
+          <OfflineBanner isOffline={!isOnline} isHome={isHome} />
           {view === 'home'      && <HomeView onNavigate={setView} />}
           {view === 'dashboard' && <DashboardView />}
           {view === 'analysis'  && <AnalysisView />}

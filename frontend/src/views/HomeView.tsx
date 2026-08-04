@@ -314,6 +314,7 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
         </section>
 
         {/* ── Pricing ─────────────────────────────────────────────────────────── */}
+        {/* À réafficher quand l'outil sera fiable et performant
         <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-8 py-24 space-y-16">
           <div className="text-center space-y-4">
             <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: '#e5e2e1' }}>
@@ -322,10 +323,8 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
             <p style={{ color: '#bbcabf', fontSize: 16 }}>Choisissez le niveau d'assistance qui vous convient.</p>
           </div>
 
-          {/* Grid : Pro centré et plus grand, Free et Institutional plus petits */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-center max-w-5xl mx-auto mt-8">
 
-            {/* Free — disabled */}
             <GlassCard className="p-8 rounded-3xl space-y-8 opacity-60">
               <div className="text-center space-y-2">
                 <span style={{ color: '#bbcabf', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 500 }}>EXPLORATEUR</span>
@@ -349,20 +348,12 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
               </button>
             </GlassCard>
 
-            {/* Pro — highlighted, plus grand */}
             <GlassCard
               className="p-8 rounded-3xl space-y-8 relative md:scale-[1.06]"
-              style={{
-                border: '1px solid rgba(78,222,163,0.5)',
-                boxShadow: '0 0 60px rgba(16,185,129,0.15)',
-                zIndex: 1,
-              }}
+              style={{ border: '1px solid rgba(78,222,163,0.5)', boxShadow: '0 0 60px rgba(16,185,129,0.15)', zIndex: 1 }}
             >
-              {/* Badge Populaire */}
-              <div
-                className="absolute left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full font-bold text-center"
-                style={{ top: -18, background: '#4edea3', color: '#003824', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}
-              >
+              <div className="absolute left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full font-bold text-center"
+                style={{ top: -18, background: '#4edea3', color: '#003824', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                 Populaire
               </div>
               <div className="text-center space-y-2">
@@ -380,15 +371,12 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
                   </li>
                 ))}
               </ul>
-              <button
-                disabled
-                style={{ width: '100%', padding: '16px', borderRadius: 12, background: 'rgba(78,222,163,0.2)', color: '#6b7280', fontWeight: 700, fontSize: 16, cursor: 'not-allowed', border: 'none' }}
-              >
+              <button disabled
+                style={{ width: '100%', padding: '16px', borderRadius: 12, background: 'rgba(78,222,163,0.2)', color: '#6b7280', fontWeight: 700, fontSize: 16, cursor: 'not-allowed', border: 'none' }}>
                 Get Signals Now
               </button>
             </GlassCard>
 
-            {/* Institutional — disabled */}
             <GlassCard className="p-8 rounded-3xl space-y-8 opacity-60">
               <div className="text-center space-y-2">
                 <span style={{ color: '#bbcabf', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 500 }}>INSTITUTIONNEL</span>
@@ -404,16 +392,15 @@ export function HomeView({ onNavigate }: { onNavigate: (view: AppView) => void }
                   </li>
                 ))}
               </ul>
-              <button
-                disabled
-                style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#6b7280', fontWeight: 700, fontSize: 15, cursor: 'not-allowed' }}
-              >
+              <button disabled
+                style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#6b7280', fontWeight: 700, fontSize: 15, cursor: 'not-allowed' }}>
                 Accès annuel
               </button>
             </GlassCard>
 
           </div>
         </section>
+        ─── */}
 
         {/* ── CTA Final ───────────────────────────────────────────────────────── */}
         <section className="max-w-3xl mx-auto px-4 sm:px-8 py-16 sm:py-24 text-center space-y-8 sm:space-y-12">

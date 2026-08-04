@@ -104,7 +104,7 @@ function SidebarContent({
       {/* ── Spacer ── */}
       <div className="flex-1" />
 
-      {/* ── Power Mode card ── */}
+      {/* ── Power Mode card ── À réafficher quand l'outil sera fiable et performant
       <div className="mx-3 mb-4 p-4 rounded-2xl"
         style={{ background: 'rgba(78,222,163,0.08)', border: '1px solid rgba(78,222,163,0.2)' }}>
         <p className="font-bold text-[13px] mb-1 text-emerald-300" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
@@ -122,6 +122,7 @@ function SidebarContent({
           Upgrade to Pro
         </button>
       </div>
+      ── */}
 
     </div>
   )

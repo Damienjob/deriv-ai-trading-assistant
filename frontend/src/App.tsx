@@ -189,9 +189,6 @@ export default function App() {
                     >
                       Installer l'app
                     </button>
-                    <p className="text-[11px] text-zinc-400 leading-tight text-right max-w-[180px]">
-                      Appuyez pour installer si votre navigateur supporte l’option.
-                    </p>
                   </div>
                 )}
                 <button

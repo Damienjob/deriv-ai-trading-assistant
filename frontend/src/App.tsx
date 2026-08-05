@@ -182,14 +182,17 @@ export default function App() {
               <div className="flex items-center gap-3 shrink-0">
                 <ThemeToggle theme={theme} onToggle={toggle} />
                 {installVisible && (
-                  <button
-                    onClick={installApp}
-                    style={{ background: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 16px rgba(37,99,235,0.25)' }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none' }}
-                  >
-                    Installer l'app
-                  </button>
+                  <div className="flex flex-col items-end gap-1">
+                    <button
+                      onClick={installApp}
+                      className="btn btn-primary py-2 px-4"
+                    >
+                      Installer l'app
+                    </button>
+                    <p className="text-[11px] text-zinc-400 leading-tight text-right max-w-[180px]">
+                      Appuyez pour installer si votre navigateur supporte l’option.
+                    </p>
+                  </div>
                 )}
                 <button
                   onClick={() => setView('dashboard')}

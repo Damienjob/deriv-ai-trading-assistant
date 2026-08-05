@@ -18,6 +18,11 @@ import { AnalysisView } from './views/AnalysisView'
 import { PositionsView } from './views/PositionsView'
 import { SupportView } from './views/SupportView'
 
+type PWAInstallPrompt = Event & {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
 function ThemeToggle({ theme, onToggle }: { theme: 'dark' | 'light'; onToggle: () => void }) {
   const isDark = theme === 'dark'
   return (
@@ -85,6 +90,28 @@ export default function App() {
 
   const isHome        = view === 'home'
   const isInvalidated = (analysis as any)?.invalidation?.invalidated ?? false
+  const [deferredPrompt, setDeferredPrompt] = useState<PWAInstallPrompt | null>(null)
+  const [installVisible, setInstallVisible] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e as PWAInstallPrompt)
+      setInstallVisible(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const installApp = async () => {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    const choice = await deferredPrompt.userChoice
+    setDeferredPrompt(null)
+    setInstallVisible(false)
+    console.log('PWA install outcome:', choice.outcome)
+  }
 
   return (
     <div className="app-bg min-h-screen">
@@ -154,6 +181,16 @@ export default function App() {
               {/* CTA + toggle */}
               <div className="flex items-center gap-3 shrink-0">
                 <ThemeToggle theme={theme} onToggle={toggle} />
+                {installVisible && (
+                  <button
+                    onClick={installApp}
+                    style={{ background: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 16px rgba(37,99,235,0.25)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none' }}
+                  >
+                    Installer l'app
+                  </button>
+                )}
                 <button
                   onClick={() => setView('dashboard')}
                   style={{ background: '#4edea3', color: '#003824', padding: '10px 20px', borderRadius: 8, fontWeight: 700, fontSize: 14, boxShadow: '0 0 20px rgba(78,222,163,0.3)', border: 'none', cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}

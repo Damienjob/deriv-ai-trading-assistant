@@ -1,0 +1,14 @@
+# Copier ce fichier en .env et remplir vos valeurs
+
+# ── Deriv API ──────────────────────────────────────────────
+DERIV_APP_ID=1089
+# Token personnel Deriv (optionnel pour les données publiques)
+# Créer un token sur : https://app.deriv.com/account/api-token
+# Permissions requises : Read + Trade
+DERIV_API_TOKEN=pat_f48c7996e4ff87b5489658eaf9349db70432cf291e887012ba6804a872da6d7c
+
+# ── CORS — origines autorisées ─────────────────────────────
+# En production, remplacer par l'URL réelle du frontend
+# Plusieurs origines séparées par des virgules :
+# ALLOWED_ORIGINS=["https://monapp.com","https://www.monapp.com"]
+ALLOWED_ORIGINS=["http://localhost:5173","http://localhost:3000"]

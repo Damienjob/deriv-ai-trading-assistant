@@ -12,7 +12,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: null,
       manifestFilename: 'manifest.webmanifest',
-      includeAssets: ['tradingtools_logo.png'],
+      includeAssets: ['favicon.ico', 'tradingtools_logo.png'],
       manifest: {
         name: 'TradingTools',
         short_name: 'TradingTools',
@@ -25,17 +25,13 @@ export default defineConfig({
         icons: [
           {
             src: '/tradingtools_logo.png',
-            sizes: '192x192',
+            sizes: '1024x1024',
             type: 'image/png',
+            purpose: 'any',
           },
           {
             src: '/tradingtools_logo.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: '/tradingtools_logo.png',
-            sizes: '512x512',
+            sizes: '1024x1024',
             type: 'image/png',
             purpose: 'maskable',
           },
